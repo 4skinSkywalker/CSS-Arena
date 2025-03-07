@@ -38,6 +38,8 @@ body {
     padding: 0.5rem 1rem;
     background: #2a313a;
     border-bottom: 1px solid #323f4a;
+    display: flex;
+    justify-content: space-between;
 }
 
 .body__label {
@@ -80,6 +82,33 @@ body {
     display: grid;
     gap: 1rem;
     padding: 1rem;
+}
+
+#output-wrap {
+    position: relative;
+    width: 400px;
+    height: 300px;
+}
+
+#output-iframe,
+#output-diff {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#output-iframe {
+    opacity: 1;
+}
+#output-diff {
+    opacity: 0;
+}
+
+.body__output:has(#show-diff:checked) #output-iframe {
+    opacity: 0;
+}
+.body__output:has(#show-diff:checked) #output-diff {
+    opacity: 1;
 }
 
 #output-iframe,

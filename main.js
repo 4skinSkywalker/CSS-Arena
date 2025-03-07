@@ -2,6 +2,23 @@ let lastEditorContent = "";
 let peer = null;
 let conn = null;
 let playerId = null;
+const refreshDebounced = debounce(refreshOutputDiff, 250);
+
+async function delay(s) {
+    return new Promise(resolve => setTimeout(resolve, s * 1000));
+}
+
+function debounce(fn, wait) {
+    let ts = Date.now();
+    return function () {
+        ts = Date.now();
+        setTimeout(() => {
+            if (Date.now() > ts + wait) {
+                fn();
+            }
+        }, wait);
+    }
+}
 
 function copyToClipboard(text) {
     const dummy = document.createElement("textarea");
@@ -37,6 +54,7 @@ function initializeEditor() {
         lastEditorContent = sanitizeHtml(editor.getSession().getValue());
         writeIntoIframe("output-iframe", lastEditorContent);
         sendEditorContent();
+        refreshDebounced();
     });
     editor.setValue(`<div></div>
 <style>
@@ -104,7 +122,7 @@ function upsertUid(uid) {
             url = url.replace(/(uid=)[^&]+/, "$1" + encodeURIComponent(uid));
         }
     }
-    
+
     window.history.pushState({ path: url }, "", url);
 }
 
@@ -161,7 +179,81 @@ function establishConnection() {
     }, 3000);
 }
 
-(function init() {
+function computePixelDifference(data1, data2, threshold = 10) {
+    if (data1.width !== data2.width || data1.height !== data2.height) {
+        throw new Error("Dimensions do not match");
+    }
+
+    let diffData = new Uint8ClampedArray(data1.data.length);
+    let equalPixels = 0;
+    for (let i = 0; i < data1.data.length; i += 4) {
+        const dr = Math.abs(data1.data[i] - data2.data[i]);
+        const dg = Math.abs(data1.data[i + 1] - data2.data[i + 1]);
+        const db = Math.abs(data1.data[i + 2] - data2.data[i + 2]);
+
+        diffData[i + 3] = 255; // Set alpha to full opacity
+
+        diffData[i]   = (dr < threshold) ? 0 : dr;
+        diffData[i+1] = (dg < threshold) ? 0 : dg;
+        diffData[i+2] = (db < threshold) ? 0 : db;
+
+        if (diffData[i] + diffData[i + 1] + diffData[i + 2] === 0) {
+            equalPixels++
+        }
+    }
+
+    console.warn({ equalPixels });
+
+    return {
+        imageData: new ImageData(diffData, data1.width, data1.height),
+        equalPixels,
+        similarity: equalPixels / (data1.width * data1.height),
+    };
+}
+
+async function getImageData(div) {
+    try {
+        const canvas = await html2canvas(div, { logging: false, useCORS: true });
+        const ctx = canvas.getContext("2d");
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        return imageData;
+    } catch (e) {
+        return null;
+    }
+}
+
+function getCanvasFromImageData(imageData) {
+    const canvas = document.createElement("canvas");
+    canvas.width = imageData.width;
+    canvas.height = imageData.height;
+    canvas.getContext("2d").putImageData(imageData, 0, 0);
+    return canvas;
+}
+
+async function refreshOutputDiff() {
+    const targetImg = document.getElementById("target-img");
+    const outputDiff = document.getElementById("output-diff");
+    const outputIframeBody = document.querySelector('#output-iframe').contentWindow.document.body;
+
+    const outputIframeImageData = await getImageData(outputIframeBody);
+    const targetImageData =await getImageData(targetImg);
+
+    if (!outputIframeImageData || !targetImageData) {
+        return;
+    }
+
+    const { imageData, similarity } = computePixelDifference(
+        outputIframeImageData,
+        targetImageData
+    );
+
+    console.warn({ similarity });
+
+    outputDiff.innerHTML = "";
+    outputDiff.appendChild(getCanvasFromImageData(imageData));
+}
+
+(async function init() {
     initializeEditor();
     sampleColors();
     if (!getPageUid()) {
