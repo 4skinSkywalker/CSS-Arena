@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Arena</title>
+    <link rel="stylesheet" href="reset.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://ajaxorg.github.io/ace-builds/src-min-noconflict/ace.js"></script>
+    <script src="https://unpkg.com/color.js@1.2.0/dist/color.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="main.js" defer></script>
+</head>
+<body>
+    <div class="body">
+        <div class="body__editor">
+            <div class="body__editor-header">
+                Editor
+            </div>
+    
+            <div class="body__editor-body">
+                <div id="ace-editor"></div>
+            </div>
+        </div>
+    
+        <div class="body__output">
+            <div class="body__output-header">
+                Output
+            </div>
+    
+            <div class="body__output-body">
+                <div class="body__label">
+                    <span>Your output</span>
+                    <div class="hr"></div>
+                </div>
+    
+                <iframe id="output-iframe" frameborder="0"></iframe>
+    
+                <div class="body__label">
+                    <span>Opponent output</span>
+                    <div class="hr"></div>
+                </div>
+    
+                <iframe id="output-iframe-opponent" frameborder="0"></iframe>
+            </div>
+        </div>
+    
+        <div class="body__target">
+            <div class="body__target-header">
+                Target
+            </div>
+    
+            <div class="body__target-body">
+                <div class="body__label">
+                    <span>Recreate this target</span>
+                    <div class="hr"></div>
+                </div>
+    
+                <img id="target-img"
+                    src="https://raw.githubusercontent.com/4skinSkywalker/Assets-for-my-Codepen/0065ae201fdc2ac56baeb310e0863c85a17299a0/targets/target_21dYOm7%402x.png"
+                    alt="Target image">
+    
+                <div id="target-colors"></div>
+
+                <div id="share-link"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
