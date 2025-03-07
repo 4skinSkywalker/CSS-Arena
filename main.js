@@ -264,3 +264,11 @@ async function refreshOutputDiff() {
     }
     initPeerConnection();
 })();
+
+/**
+ * TODO
+ * 1. Connection gets re-established too many times
+ * 2. Debounce data on editor change
+ * 3. Sanitize bad attributes
+ * 4. Save last editor content in local storage
+ */
