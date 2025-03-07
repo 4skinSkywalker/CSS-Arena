@@ -213,9 +213,15 @@ function computePixelDifference(data1, data2, threshold = 10) {
 
 async function getImageData(div) {
     try {
-        const canvas = await html2canvas(div, { logging: false, useCORS: true });
+        const canvas = await html2canvas(div, {
+            logging: false,
+            useCORS: true,
+            width: 400,
+            height: 300,
+            scale: 1,
+        });
         const ctx = canvas.getContext("2d");
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, 400, 300);
         return imageData;
     } catch (e) {
         return null;
@@ -226,7 +232,8 @@ function getCanvasFromImageData(imageData) {
     const canvas = document.createElement("canvas");
     canvas.width = imageData.width;
     canvas.height = imageData.height;
-    canvas.getContext("2d").putImageData(imageData, 0, 0);
+    const ctx = canvas.getContext("2d");
+    ctx.putImageData(imageData, 0, 0);
     return canvas;
 }
 
