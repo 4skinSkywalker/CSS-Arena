@@ -63,9 +63,8 @@ body {
 .body__output,
 .body__target {
     height: 100svh;
-    display: grid;
-    grid-template-rows: auto 1fr;
-    align-items: start;
+    display: flex;
+    flex-direction: column;
     background: #07080b;
 }
 
