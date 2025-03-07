@@ -86,11 +86,26 @@ function initPeerConnection() {
     peer = new Peer(getPageUid());
     peer.on("connection", gotConnection);
     establishConnection();
-    setShareLink(getOpponentId(getPageUid()));
 }
 
 function getUid() {
     return Math.random().toString(36).substring(2, 15);
+}
+
+function upsertUid(uid) {
+    let url = window.location.href;
+    const newParam = "uid=" + encodeURIComponent(uid);
+    if (url.indexOf("?") === -1) {
+        url += "?" + newParam;
+    } else {
+        if (url.indexOf("uid=") === -1) {
+            url += "&" + newParam;
+        } else {
+            url = url.replace(/(uid=)[^&]+/, "$1" + encodeURIComponent(uid));
+        }
+    }
+    
+    window.history.pushState({ path: url }, "", url);
 }
 
 function getPageUid() {
@@ -149,5 +164,11 @@ function establishConnection() {
 (function init() {
     initializeEditor();
     sampleColors();
+    if (!getPageUid()) {
+        upsertUid(`${getUid()}1`);
+    }
+    if (getPageUid().slice(-1) === "1") {
+        setShareLink(getOpponentId(getPageUid()));
+    }
     initPeerConnection();
 })();
