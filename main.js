@@ -21,6 +21,15 @@ function debounce(fn, wait) {
     }
 }
 
+function resetIframe(id) {
+    const iframe = document.getElementById(id);
+    const iframeBody = iframe.contentWindow.document.body;
+    iframeBody.style.margin = "0";
+    iframeBody.style.width = "400px";
+    iframeBody.style.height = "300px";
+    iframeBody.style.overflow = "hidden";
+}
+
 function copyToClipboard(text) {
     const dummy = document.createElement("textarea");
     document.body.appendChild(dummy);
@@ -44,6 +53,7 @@ function writeIntoIframe(id, _content) {
     iframe.contentWindow.document.open();
     iframe.contentWindow.document.write(content);
     iframe.contentWindow.document.close()
+    resetIframe(id);
 }
 
 function saveLastEditorContent() {
@@ -63,7 +73,7 @@ function editorChangeHandler() {
     lastEditorContent = sanitizeHtml(editor.getSession().getValue());
     saveLastEditorContent();
     writeIntoIframe("output-iframe", lastEditorContent);
-    sendEditorContent();
+    sendMessage("lastEditorContent", lastEditorContent);
     refreshOutputDiff();
 }
 
@@ -159,16 +169,28 @@ function setShareLink(opponentId) {
     shareLink.innerHTML = `<a href="?uid=${opponentId}" target="_blank">Invite link</a>`;
 }
 
-function sendEditorContent() {
+function sendMessage(topic, message) {
     if (conn) {
-        conn.send(lastEditorContent);
+        conn.send(JSON.stringify({ topic, message }));
     }
 }
 
 function gotConnection(conn) {
     conn.on("data", function (data) {
-        console.log("Received: " + data);
-        writeIntoIframe("output-iframe-opponent", data);
+        data = JSON.parse(data);
+        switch (data.topic) {
+            case "lastEditorContent": {
+                writeIntoIframe("output-iframe-opponent", data.message);
+                break;
+            }
+            case "progress": {
+                document.getElementById("progress-opponent").innerText = data.message;
+                break;
+            }
+            default: {
+                console.warn("Unknown topic", data.topic);
+            }
+        }
     });
 
     conn.on("close", () => {
@@ -177,7 +199,8 @@ function gotConnection(conn) {
         peer.connect(getOpponentId(getPageUid()));
     });
 
-    conn.send(lastEditorContent);
+    sendMessage("lastEditorContent", lastEditorContent);
+    refreshOutputDiff();
 }
 
 function establishConnection() {
@@ -257,13 +280,12 @@ function getCanvasFromImageData(imageData) {
 }
 
 async function refreshOutputDiff() {
+    await delay(0.15);
+
     const targetImg = document.getElementById("target-img");
     const outputDiff = document.getElementById("output-diff");
     const outputIframe = document.querySelector('#output-iframe');
     const outputIframeBody = outputIframe.contentWindow.document.body;
-    outputIframeBody.style.width = "400px";
-    outputIframeBody.style.height = "300px";
-    outputIframeBody.style.overflow = "hidden";
 
     const outputIframeImageData = await getImageData(outputIframeBody);
     const targetImageData =await getImageData(targetImg);
@@ -277,7 +299,9 @@ async function refreshOutputDiff() {
         targetImageData
     );
 
-    console.warn({ similarity });
+    const progress = Math.round(similarity * 100) + "%";
+    document.getElementById("progress").innerText = progress;
+    sendMessage("progress", progress);
 
     outputDiff.innerHTML = "";
     outputDiff.appendChild(getCanvasFromImageData(imageData));
