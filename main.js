@@ -53,7 +53,7 @@ function saveLastEditorContent() {
 function loadLastEditorContent() {
     const content = localStorage.getItem(`editor-content_${getPageUid()}`);
     if (content) {
-        editor.setValue(content);
+        editor.setValue(content, -1);
         return true;
     }
     return false;
@@ -81,7 +81,7 @@ function initializeEditor() {
         height: 100px;
         background: #dd6b4d;
     }
-</style>`);
+</style>`, -1);
     }
 }
 
@@ -259,7 +259,11 @@ function getCanvasFromImageData(imageData) {
 async function refreshOutputDiff() {
     const targetImg = document.getElementById("target-img");
     const outputDiff = document.getElementById("output-diff");
-    const outputIframeBody = document.querySelector('#output-iframe').contentWindow.document.body;
+    const outputIframe = document.querySelector('#output-iframe');
+    const outputIframeBody = outputIframe.contentWindow.document.body;
+    outputIframeBody.style.width = "400px";
+    outputIframeBody.style.height = "300px";
+    outputIframeBody.style.overflow = "hidden";
 
     const outputIframeImageData = await getImageData(outputIframeBody);
     const targetImageData =await getImageData(targetImg);
