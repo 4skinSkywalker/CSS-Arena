@@ -174,7 +174,7 @@ function gotConnection(conn) {
     conn.on("close", () => {
         console.log("Connection closed.");
         console.log("Re-establishing connection...");
-        establishConnection();
+        peer.connect(getOpponentId(getPageUid()));
     });
 
     conn.send(lastEditorContent);
@@ -290,9 +290,3 @@ async function refreshOutputDiff() {
     }
     initPeerConnection();
 })();
-
-/**
- * TODO
- * 1. Connection gets re-established too many times
- * 3. Sanitize bad attributes
- */
