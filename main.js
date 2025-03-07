@@ -1,8 +1,9 @@
 let lastEditorContent = "";
+let editor = null;
 let peer = null;
 let conn = null;
 let playerId = null;
-const refreshDebounced = debounce(refreshOutputDiff, 250);
+const editorChangeHandlerDebounced = debounce(editorChangeHandler, 250);
 
 async function delay(s) {
     return new Promise(resolve => setTimeout(resolve, s * 1000));
@@ -34,7 +35,7 @@ function sanitizeHtml(html) {
     const doc = parser.parseFromString(html, "text/html");
     const scriptElements = doc.getElementsByTagName("script");
     [...scriptElements].forEach((s) => s.remove());
-    return doc.documentElement.outerHTML;
+    return doc.body.innerHTML;
 }
 
 function writeIntoIframe(id, _content) {
@@ -45,18 +46,35 @@ function writeIntoIframe(id, _content) {
     iframe.contentWindow.document.close()
 }
 
+function saveLastEditorContent() {
+    localStorage.setItem(`editor-content_${getPageUid()}`, lastEditorContent);
+}
+
+function loadLastEditorContent() {
+    const content = localStorage.getItem(`editor-content_${getPageUid()}`);
+    if (content) {
+        editor.setValue(content);
+        return true;
+    }
+    return false;
+}
+
+function editorChangeHandler() {
+    lastEditorContent = sanitizeHtml(editor.getSession().getValue());
+    saveLastEditorContent();
+    writeIntoIframe("output-iframe", lastEditorContent);
+    sendEditorContent();
+    refreshOutputDiff();
+}
+
 function initializeEditor() {
-    const editor = ace.edit("ace-editor");
+    editor = ace.edit("ace-editor");
     editor.getSession().setUseWorker(false);
     editor.setTheme("ace/theme/monokai");
     editor.getSession().setMode("ace/mode/html");
-    editor.getSession().on("change", function () {
-        lastEditorContent = sanitizeHtml(editor.getSession().getValue());
-        writeIntoIframe("output-iframe", lastEditorContent);
-        sendEditorContent();
-        refreshDebounced();
-    });
-    editor.setValue(`<div></div>
+    editor.getSession().on("change", editorChangeHandlerDebounced);
+    if(!loadLastEditorContent()) {
+        editor.setValue(`<div></div>
 <style>
     div {
         width: 100px;
@@ -64,6 +82,7 @@ function initializeEditor() {
         background: #dd6b4d;
     }
 </style>`);
+    }
 }
 
 function getColorHtml(bg) {
@@ -220,7 +239,7 @@ async function getImageData(div) {
             height: 300,
             scale: 1,
         });
-        const ctx = canvas.getContext("2d");
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
         const imageData = ctx.getImageData(0, 0, 400, 300);
         return imageData;
     } catch (e) {
@@ -232,7 +251,7 @@ function getCanvasFromImageData(imageData) {
     const canvas = document.createElement("canvas");
     canvas.width = imageData.width;
     canvas.height = imageData.height;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     ctx.putImageData(imageData, 0, 0);
     return canvas;
 }
@@ -275,7 +294,5 @@ async function refreshOutputDiff() {
 /**
  * TODO
  * 1. Connection gets re-established too many times
- * 2. Debounce data on editor change
  * 3. Sanitize bad attributes
- * 4. Save last editor content in local storage
  */
