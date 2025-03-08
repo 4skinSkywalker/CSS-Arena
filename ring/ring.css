@@ -47,6 +47,7 @@
 .ring__editor,
 .ring__output,
 .ring__target {
+    min-width: 448px;
     height: 100svh;
     display: flex;
     flex-direction: column;
@@ -116,6 +117,7 @@
     max-width: 400px;
     width: 400px;
     height: 300px;
+    image-rendering: crisp-edges;
 }
 
 #target-colors {
@@ -267,5 +269,35 @@
 
     50% {
         box-shadow: 0 0 15px 5px orange;
+    }
+}
+
+@media (max-width: 1024px) {
+    .ring {
+        grid-template-columns: 1fr;
+    }
+
+    .ring__editor,
+    .ring__output,
+    .ring__target {
+        min-width: 412px;
+    }
+
+    .ring__editor {
+        height: 55svh;
+    }
+
+    .ring__output,
+    .ring__target {
+        height: auto;
+    }
+
+    .ring__output-body,
+    .ring__target-body {
+        padding-inline: 0;
+    }
+
+    .ring__target-body {
+        padding-bottom: 3rem;
     }
 }

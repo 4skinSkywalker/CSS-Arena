@@ -366,8 +366,7 @@ function initializeTargetImage() {
     return new Promise(async resolve => {
         const targetImg = document.getElementById("target-img");
         const battleId = getUrlAttr("battle");
-        const battles = await (await fetch("../battles.json")).json();
-        targetImg.src = battles[battleId];
+        targetImg.src = `../img/${battleId}.png`;
         targetImg.onload = () => resolve();
     });
 }

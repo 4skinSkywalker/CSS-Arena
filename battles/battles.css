@@ -48,6 +48,21 @@ body {
     height: 100%;
 }
 
+.battle>img {
+    image-rendering: crisp-edges;
+}
+
 .battle:hover {
     transform: rotate(2deg) scale(1.07);
+}
+
+@media (max-width: 768px) {
+    .battles {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .battle {
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+    }
 }
