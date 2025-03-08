@@ -3,6 +3,7 @@ let editor = null;
 let peer = null;
 let conn = null;
 let playerId = null;
+let tryToConnect = false;
 const editorChangeHandlerDebounced = debounce(editorChangeHandler, 250);
 
 async function delay(s) {
@@ -219,10 +220,9 @@ function gotConnection(conn) {
     });
 
     conn.on("close", async () => {
-        peer.connect(getOpponentId(getPageUid()));
         setConnectionStatus("Disconnected");
-        await delay(0.5);
-        setConnectionStatus("Reconnecting...");
+        await delay(2);
+        establishConnection();
     });
 
     sendMessage("lastEditorContent", lastEditorContent);
@@ -231,25 +231,26 @@ function gotConnection(conn) {
 
 async function establishConnection() {
     setConnectionStatus("Connecting...");
-    await delay(0.5);
 
-    let connected = false;
+    tryToConnect = true;
     const timer = setInterval(() => {
-        if (connected) {
+        if (!tryToConnect) {
             return clearInterval(timer);
         }
 
-        setConnectionStatus("Looking for opponent...");
+        if (conn) {
+            conn.removeAllListeners();
+        }
 
-        const opponentId = getOpponentId(getPageUid());
-        conn = peer.connect(opponentId);
+        setConnectionStatus("Looking for opponent...");
+        conn = peer.connect(getOpponentId(getPageUid()));
 
         conn.on("open", () => {
             setConnectionStatus("Connection to opponent established!");
             gotConnection(conn);
-            connected = true;
+            tryToConnect = false;
         });
-    }, 3000);
+    }, 2000);
 }
 
 function computePixelDifference(data1, data2, threshold = 10) {
