@@ -119,6 +119,7 @@
 }
 
 #target-colors {
+    max-width: 400px;
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
@@ -147,6 +148,7 @@
 }
 
 #share-link>a {
+    display: inline-block;
     background: #36351f;
     color: #ffdf00;
     padding: 0.5rem 1rem;
