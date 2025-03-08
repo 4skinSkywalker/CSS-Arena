@@ -6,7 +6,7 @@ let playerId = null;
 let tryToConnect = false;
 
 async function delay(s) {
-    return new Promise(resolve => setTimeout(resolve, s * 1000));
+    return new Promise(res => setTimeout(res, s * 1000));
 }
 
 function resetIframe(iframeBody) {
@@ -292,17 +292,18 @@ function computePixelDifference(data1, data2, threshold = 10) {
 
 async function getImageData(div) {
     try {
-        const canvas = await html2canvas(div, {
-            logging: false,
-            useCORS: true,
-            width: 400,
-            height: 300,
-            scale: 1,
-        });
+        const dataUrl = await domtoimage.toPng(div);
+        const img = new Image();
+        const canvas = document.createElement("CANVAS");
+        canvas.width = 400;
+        canvas.height = 300;
         const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        await new Promise(res => img.onload = res, img.src = dataUrl);
+        ctx.drawImage(img, 0, 0);
         const imageData = ctx.getImageData(0, 0, 400, 300);
         return imageData;
     } catch (e) {
+        console.error(e);
         return null;
     }
 }
@@ -344,13 +345,10 @@ async function refreshOutputDiff() {
     outputDiff.appendChild(getCanvasFromImageData(imageData));
 }
 
-function initializeTargetImage() {
-    return new Promise(async resolve => {
-        const targetImg = document.getElementById("target-img");
-        const battleId = getUrlAttr("battle");
-        targetImg.src = `../img/${battleId}.png`;
-        targetImg.onload = () => resolve();
-    });
+async function initializeTargetImage() {
+    const targetImg = document.getElementById("target-img");
+    const battleId = getUrlAttr("battle");
+    await new Promise(res => targetImg.onload = res, targetImg.src = `../img/${battleId}.png`);
 }
 
 (async function init() {
