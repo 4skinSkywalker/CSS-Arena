@@ -92,7 +92,7 @@ function initializeEditor() {
         height: 100px;
         background: #dd6b4d;
     }
-</style>`, -1);
+</style>`);
     }
 }
 
