@@ -78,6 +78,16 @@ function editorChangeHandler() {
     refreshOutputDiff();
 }
 
+function toggleVimMode() {
+    const vimMode = document.getElementById("vim-mode").checked;
+    console.log({ vimMode });
+    if (!vimMode) {
+        editor.setKeyboardHandler(null);
+    } else {
+        editor.setKeyboardHandler("ace/keyboard/vim");
+    }
+}
+
 function initializeEditor() {
     editor = ace.edit("ace-editor");
     editor.getSession().setUseWorker(false);
