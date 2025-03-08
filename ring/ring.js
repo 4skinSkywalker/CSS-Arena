@@ -4,27 +4,12 @@ let peer = null;
 let conn = null;
 let playerId = null;
 let tryToConnect = false;
-const editorChangeHandlerDebounced = debounce(editorChangeHandler, 250);
 
 async function delay(s) {
     return new Promise(resolve => setTimeout(resolve, s * 1000));
 }
 
-function debounce(fn, wait) {
-    let ts = Date.now();
-    return function () {
-        ts = Date.now();
-        setTimeout(() => {
-            if (Date.now() > ts + wait) {
-                fn();
-            }
-        }, wait);
-    }
-}
-
-function resetIframe(id) {
-    const iframe = document.getElementById(id);
-    const iframeBody = iframe.contentWindow.document.body;
+function resetIframe(iframeBody) {
     iframeBody.style.margin = "0";
     iframeBody.style.width = "400px";
     iframeBody.style.height = "300px";
@@ -53,8 +38,8 @@ function writeIntoIframe(id, _content) {
     const iframe = document.getElementById(id);
     iframe.contentWindow.document.open();
     iframe.contentWindow.document.write(content);
-    iframe.contentWindow.document.close()
-    resetIframe(id);
+    iframe.contentWindow.document.close();
+    resetIframe(iframe.contentWindow.document.body);
 }
 
 function saveLastEditorContent() {
@@ -80,7 +65,6 @@ function editorChangeHandler() {
 
 function toggleVimMode() {
     const vimMode = document.getElementById("vim-mode").checked;
-    console.log({ vimMode });
     if (!vimMode) {
         editor.setKeyboardHandler(null);
     } else {
@@ -93,7 +77,7 @@ function initializeEditor() {
     editor.getSession().setUseWorker(false);
     editor.setTheme("ace/theme/monokai");
     editor.getSession().setMode("ace/mode/html");
-    editor.getSession().on("change", editorChangeHandlerDebounced);
+    editor.getSession().on("change", editorChangeHandler);
     if (!loadLastEditorContent()) {
         editor.setValue(`<div></div>
 <style>
@@ -298,8 +282,6 @@ function computePixelDifference(data1, data2, threshold = 10) {
             equalPixels++
         }
     }
-
-    console.warn({ equalPixels });
 
     return {
         imageData: new ImageData(diffData, data1.width, data1.height),
