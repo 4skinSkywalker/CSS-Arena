@@ -128,7 +128,7 @@ function addCopyToClipboard(child) {
 
 async function sampleColors() {
     const imgEl = document.getElementById("target-img");
-    const opts = { amount: 10, format: 'hex', sample: 1 };
+    const opts = { amount: 10, format: "hex", sample: 1 };
     const colors = await colorjs.prominent(imgEl, opts);
 
     for (const color of colors) {
