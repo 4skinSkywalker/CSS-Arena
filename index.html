@@ -1,109 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CSS Arena</title>
     <link rel="stylesheet" href="reset.css">
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://ajaxorg.github.io/ace-builds/src-min-noconflict/ace.js"></script>
-    <script src="https://unpkg.com/color.js@1.2.0/dist/color.js"></script>
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="main.js" defer></script>
+    <link rel="stylesheet" href="common.css">
 </head>
+
 <body>
-    <div class="body">
-        <div class="body__editor">
-            <div class="body__editor-header">
-                <div>Editor</div>
-                <div>
-                    <input type="checkbox" id="vim-mode" onclick="toggleVimMode()">
-                    <label for="vim-mode">Vim mode</label>
-                </div>
-            </div>
-    
-            <div class="body__editor-body">
-                <div id="ace-editor"></div>
-            </div>
-        </div>
-    
-        <div class="body__output">
-            <div class="body__output-header">
-                <div>Output</div>
-                <div>
-                    <input type="checkbox" id="show-diff">
-                    <label for="show-diff">Diff</label>
-                </div>
-            </div>
-    
-            <div class="body__output-body">
-                <div class="body__label">
-                    <span>Your output</span>
-                    <div id="progressbar">
-                        <div class="bar"></div>
-                    </div>
-                    <span id="progress">0%</span>
-                </div>
-
-                <div id="output-wrap">
-                    <iframe id="output-iframe" frameborder="0"></iframe>
-                    <div id="output-diff"></div>
-                </div>
-    
-                <div class="body__label">
-                    <span>Opponent output</span>
-                    <div id="progressbar-opponent">
-                        <div class="bar"></div>
-                    </div>
-                    <span id="progress-opponent">0%</span>
-                </div>
-    
-                <iframe id="output-iframe-opponent" frameborder="0"></iframe>
-            </div>
-        </div>
-    
-        <div class="body__target">
-            <div class="body__target-header">
-                <div>Target</div>
-            </div>
-    
-            <div class="body__target-body">
-                <div class="body__label">
-                    <span>Recreate this target</span>
-                    <div class="hr"></div>
-                </div>
-    
-                <img id="target-img"
-                    src="https://raw.githubusercontent.com/4skinSkywalker/Assets-for-my-Codepen/refs/heads/main/targets/target_21dYOm7.png"
-                    alt="Target image">
-    
-                <div id="target-colors"></div>
-
-                <div id="share-link"></div>
-
-                <div id="connection-status"></div>
-
-                <div class="chat">
-                    <input type="checkbox" id="chat-toggle" hidden>
-                    <label class="chat__header" for="chat-toggle">
-                        <div class="chat__title">Chat</div>
-                        <div class="btn">
-                            <i class="bi bi-chat-fill"></i>
-                        </div>
-                    </label>
-                    <div class="chat__messages-wrap">
-                        <div class="chat__messages"></div>
-                        <div class="chat__text">
-                            <input id="chat-message-send" type="text" placeholder="Type your message..." onkeydown="if (event.key === 'Enter') chatMessageSend()">
-                            <button class="btn" onClick="chatMessageSend()">
-                                <i class="bi bi-send-fill"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <script>
+        location.href = "battles/battles.html";
+    </script>
 </body>
+
 </html>

@@ -58,11 +58,11 @@ function writeIntoIframe(id, _content) {
 }
 
 function saveLastEditorContent() {
-    localStorage.setItem(`editor-content_${getPageUid()}`, lastEditorContent);
+    window.localStorage.setItem(`editor-content_${getPageUid()}`, lastEditorContent);
 }
 
 function loadLastEditorContent() {
-    const content = localStorage.getItem(`editor-content_${getPageUid()}`);
+    const content = window.localStorage.getItem(`editor-content_${getPageUid()}`);
     if (content) {
         editor.setValue(content, -1);
         return true;
@@ -94,7 +94,7 @@ function initializeEditor() {
     editor.setTheme("ace/theme/monokai");
     editor.getSession().setMode("ace/mode/html");
     editor.getSession().on("change", editorChangeHandlerDebounced);
-    if(!loadLastEditorContent()) {
+    if (!loadLastEditorContent()) {
         editor.setValue(`<div></div>
 <style>
     div {
@@ -182,11 +182,19 @@ function upsertUid(uid) {
         }
     }
 
-    window.history.pushState({ path: url }, "", url);
+    window.history.replaceState({ path: url }, "", url);
+}
+
+function getUrlAttr(name) {
+    return (window.location.search.match(new RegExp(`${name}=([^&]+)`)) || [])[1];
+}
+
+function getBattleId() {
+    return getUrlAttr("battle");
 }
 
 function getPageUid() {
-    return (window.location.search.match(/uid=([^&]+)/) || [])[1];
+    return getUrlAttr("uid");
 }
 
 function getOpponentId(playerId) {
@@ -197,7 +205,7 @@ function getOpponentId(playerId) {
 function setShareLink(opponentId) {
     const shareLink = document.getElementById("share-link");
     shareLink.style.display = "block";
-    shareLink.innerHTML = `<a href="?uid=${opponentId}" target="_blank">Invite link</a>`;
+    shareLink.innerHTML = `<a href="?battle=${getBattleId()}&uid=${opponentId}" target="_blank">Invite link</a>`;
 }
 
 function setConnectionStatus(status) {
@@ -282,9 +290,9 @@ function computePixelDifference(data1, data2, threshold = 10) {
 
         diffData[i + 3] = 255; // Set alpha to full opacity
 
-        diffData[i]   = (dr < threshold) ? 0 : dr;
-        diffData[i+1] = (dg < threshold) ? 0 : dg;
-        diffData[i+2] = (db < threshold) ? 0 : db;
+        diffData[i] = (dr < threshold) ? 0 : dr;
+        diffData[i + 1] = (dg < threshold) ? 0 : dg;
+        diffData[i + 2] = (db < threshold) ? 0 : db;
 
         if (diffData[i] + diffData[i + 1] + diffData[i + 2] === 0) {
             equalPixels++
@@ -335,7 +343,7 @@ async function refreshOutputDiff() {
     const outputIframeBody = outputIframe.contentWindow.document.body;
 
     const outputIframeImageData = await getImageData(outputIframeBody);
-    const targetImageData =await getImageData(targetImg);
+    const targetImageData = await getImageData(targetImg);
 
     if (!outputIframeImageData || !targetImageData) {
         return;
@@ -354,8 +362,19 @@ async function refreshOutputDiff() {
     outputDiff.appendChild(getCanvasFromImageData(imageData));
 }
 
+function initializeTargetImage() {
+    return new Promise(async resolve => {
+        const targetImg = document.getElementById("target-img");
+        const battleId = getUrlAttr("battle");
+        const battles = await (await fetch("../battles.json")).json();
+        targetImg.src = battles[battleId];
+        targetImg.onload = () => resolve();
+    });
+}
+
 (async function init() {
     initializeEditor();
+    await initializeTargetImage();
     sampleColors();
     if (!getPageUid()) {
         upsertUid(`${getUid()}1`);

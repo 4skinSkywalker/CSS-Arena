@@ -1,54 +1,13 @@
-@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
-
-::-webkit-scrollbar {
-    width: 15px;
-    height: 15px;
-}
-
-::-webkit-scrollbar-track {
-    background: #424242;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #666;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #888;
-}
-
-body {
-    background: #191919;
-    color: #efefef;
-    font-family: Verdana, sans-serif;
-    display: grid;
-    height: 100svh;
-    overflow: hidden;
-}
-
-.btn {
-    all: unset;
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    font-weight: bold;
-    color: #efefef;
-    cursor: pointer;
-}
-
-.btn:hover {
-    background: #2d3740;
-}
-
-.body {
+.ring {
     display: grid;
     grid-template-columns: 1fr auto auto;
 }
 
-.body>* {
+.ring>* {
     border-right: 1px solid #323f4a;
 }
 
-.body [class$="header"] {
+.ring [class$="header"] {
     height: 36px;
     padding-inline: 0.5rem;
     display: flex;
@@ -59,7 +18,7 @@ body {
     border-bottom: 1px solid #323f4a;
 }
 
-.body__label {
+.ring__label {
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -67,27 +26,27 @@ body {
     font-size: 0.9rem;
 }
 
-.body__label>[id^="progressbar"] {
+.ring__label>[id^="progressbar"] {
     flex-grow: 1;
     height: 1.25rem;
     border: 1px solid #323f4a;
 }
-  
-.body__label>[id^="progressbar"] .bar {
+
+.ring__label>[id^="progressbar"] .bar {
     width: 0%;
     height: 100%;
     background: linear-gradient(gold, #c85, gold);
     background-repeat: repeat;
     box-shadow: 0 0 10px 0px orange;
-    animation: 
+    animation:
         shine 4s ease-in infinite,
         end 1s ease-out 1;
     transition: width 3s ease;
 }
 
-.body__editor,
-.body__output,
-.body__target {
+.ring__editor,
+.ring__output,
+.ring__target {
     height: 100svh;
     display: flex;
     flex-direction: column;
@@ -100,18 +59,18 @@ body {
     font: 1rem/normal 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Source Code Pro', 'source-code-pro', monospace;
 }
 
-.body__editor-body,
-.body__output-body,
-.body__target-body {
+.ring__editor-body,
+.ring__output-body,
+.ring__target-body {
     overflow-y: auto;
 }
 
-.body__editor-body {
+.ring__editor-body {
     height: 100%;
 }
 
-.body__output-body,
-.body__target-body {
+.ring__output-body,
+.ring__target-body {
     display: grid;
     gap: 1rem;
     padding: 1rem;
@@ -133,14 +92,16 @@ body {
 #output-iframe {
     opacity: 1;
 }
+
 #output-diff {
     opacity: 0;
 }
 
-.body__output:has(#show-diff:checked) #output-iframe {
+.ring__output:has(#show-diff:checked) #output-iframe {
     opacity: 0;
 }
-.body__output:has(#show-diff:checked) #output-diff {
+
+.ring__output:has(#show-diff:checked) #output-diff {
     opacity: 1;
 }
 
@@ -185,7 +146,7 @@ body {
     display: none;
 }
 
-#share-link > a {
+#share-link>a {
     background: #36351f;
     color: #ffdf00;
     padding: 0.5rem 1rem;
@@ -252,6 +213,7 @@ body {
     align-self: end;
     box-shadow: -10px 10px 10px 0 #0001;
 }
+
 .chat__message::before {
     content: "You";
     display: block;
@@ -263,6 +225,7 @@ body {
     align-self: start;
     box-shadow: 10px 10px 10px 0 #0001;
 }
+
 .chat__message-opponent::before {
     content: "Opponent";
     display: block;
@@ -284,11 +247,23 @@ body {
 }
 
 @keyframes shine {
-    0% { background-position: 0 0; }
-    100% { background-position: 0 50px; }
+    0% {
+        background-position: 0 0;
+    }
+
+    100% {
+        background-position: 0 50px;
+    }
 }
-  
+
 @keyframes end {
-    0%, 100% { box-shadow: 0 0 10px 0px orange; }
-    50% { box-shadow: 0 0 15px 5px orange; }
+
+    0%,
+    100% {
+        box-shadow: 0 0 10px 0px orange;
+    }
+
+    50% {
+        box-shadow: 0 0 15px 5px orange;
+    }
 }
