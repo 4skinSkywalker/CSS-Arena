@@ -129,6 +129,20 @@ async function sampleColors() {
     }
 }
 
+function addChatMessage(message, isOpponent) {
+    const chatMessage = document.createElement("DIV");
+    chatMessage.classList.add(isOpponent ? "chat__message-opponent" : "chat__message");
+    chatMessage.innerText = message;
+    document.querySelector(".chat__messages").prepend(chatMessage);
+}
+
+function chatMessageSend() {
+    const message = document.getElementById("chat-message-send").value;
+    document.getElementById("chat-message-send").value = "";
+    sendMessage("chat", message);
+    addChatMessage(message, false);
+}
+
 function initPeerConnection() {
     peer = new Peer(getPageUid());
     peer.on("connection", gotConnection);
@@ -166,7 +180,13 @@ function getOpponentId(playerId) {
 
 function setShareLink(opponentId) {
     const shareLink = document.getElementById("share-link");
+    shareLink.style.display = "block";
     shareLink.innerHTML = `<a href="?uid=${opponentId}" target="_blank">Invite link</a>`;
+}
+
+function setConnectionStatus(status) {
+    const connectionStatus = document.getElementById("connection-status");
+    connectionStatus.innerText = status;
 }
 
 function sendMessage(topic, message) {
@@ -187,34 +207,45 @@ function gotConnection(conn) {
                 document.getElementById("progress-opponent").innerText = data.message;
                 break;
             }
+            case "chat": {
+                document.getElementById("chat-toggle").checked = true;
+                addChatMessage(data.message, true);
+                break;
+            }
             default: {
                 console.warn("Unknown topic", data.topic);
             }
         }
     });
 
-    conn.on("close", () => {
-        console.log("Connection closed.");
-        console.log("Re-establishing connection...");
+    conn.on("close", async () => {
         peer.connect(getOpponentId(getPageUid()));
+        setConnectionStatus("Disconnected");
+        await delay(0.5);
+        setConnectionStatus("Reconnecting...");
     });
 
     sendMessage("lastEditorContent", lastEditorContent);
     refreshOutputDiff();
 }
 
-function establishConnection() {
+async function establishConnection() {
+    setConnectionStatus("Connecting...");
+    await delay(0.5);
+
     let connected = false;
     const timer = setInterval(() => {
         if (connected) {
             return clearInterval(timer);
         }
 
+        setConnectionStatus("Looking for opponent...");
+
         const opponentId = getOpponentId(getPageUid());
         conn = peer.connect(opponentId);
 
         conn.on("open", () => {
-            console.log(`Connection to ${opponentId} established!`);
+            setConnectionStatus("Connection to opponent established!");
             gotConnection(conn);
             connected = true;
         });

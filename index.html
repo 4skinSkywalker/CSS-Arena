@@ -73,6 +73,27 @@
                 <div id="target-colors"></div>
 
                 <div id="share-link"></div>
+
+                <div id="connection-status"></div>
+
+                <div class="chat">
+                    <input type="checkbox" id="chat-toggle" hidden>
+                    <label class="chat__header" for="chat-toggle">
+                        <div class="chat__title">Chat</div>
+                        <div class="btn">
+                            <i class="bi bi-chat-fill"></i>
+                        </div>
+                    </label>
+                    <div class="chat__messages-wrap">
+                        <div class="chat__messages"></div>
+                        <div class="chat__text">
+                            <input id="chat-message-send" type="text" placeholder="Type your message..." onkeydown="if (event.key === 'Enter') chatMessageSend()">
+                            <button class="btn" onClick="chatMessageSend()">
+                                <i class="bi bi-send-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

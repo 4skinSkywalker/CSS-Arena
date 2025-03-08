@@ -1,3 +1,5 @@
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+
 ::-webkit-scrollbar {
     width: 15px;
     height: 15px;
@@ -22,6 +24,19 @@ body {
     display: grid;
     height: 100svh;
     overflow: hidden;
+}
+
+.btn {
+    all: unset;
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    font-weight: bold;
+    color: #efefef;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: #2d3740;
 }
 
 .body {
@@ -155,10 +170,103 @@ body {
     border-radius: 50%;
 }
 
+#share-link {
+    display: none;
+}
+
 #share-link > a {
     background: #36351f;
     color: #ffdf00;
     padding: 0.5rem 1rem;
     border-radius: 1rem;
     font-weight: bold;
+}
+
+.chat {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 400px;
+    display: grid;
+    grid-template-rows: auto 0;
+    overflow: hidden;
+    background: #272822;
+    border: 1px solid #323f4a;
+    border-top-left-radius: 0.5rem;
+    box-shadow: -10px -10px 10px 0 #0003;
+    transition: grid-template-rows 0.2s ease-in-out;
+}
+
+.chat:has(#chat-toggle:checked) {
+    grid-template-rows: auto 250px;
+}
+
+.chat__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.chat__title {
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    background: #2a313a;
+    border-bottom: 1px solid #323f4a;
+}
+
+.chat__messages-wrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.chat__messages {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    overflow-y: auto;
+}
+
+.chat__message,
+.chat__message-opponent {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    background: #2a313a;
+    max-width: 320px;
+}
+
+.chat__message {
+    align-self: end;
+    box-shadow: -10px 10px 10px 0 #0001;
+}
+.chat__message::before {
+    content: "You";
+    display: block;
+    font-size: 0.777rem;
+    opacity: 0.8;
+}
+
+.chat__message-opponent {
+    align-self: start;
+    box-shadow: 10px 10px 10px 0 #0001;
+}
+.chat__message-opponent::before {
+    content: "Opponent";
+    display: block;
+    font-size: 0.777rem;
+    opacity: 0.8;
+}
+
+.chat__text {
+    display: flex;
+    gap: 0.5rem;
+    border-top: 1px solid #323f4a;
+}
+
+.chat__text input {
+    flex-grow: 1;
+    all: unset;
+    padding: 0.5rem;
+    width: 100%;
 }
