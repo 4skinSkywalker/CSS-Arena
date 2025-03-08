@@ -130,6 +130,11 @@ async function sampleColors() {
     }
 }
 
+function setProgress(percentage, isOpponent) {
+    document.querySelector(`#progressbar${isOpponent ? "-opponent" : ""} .bar`).style.width = percentage;
+    document.getElementById(`progress${isOpponent ? "-opponent" : ""}`).innerText = percentage;
+}
+
 function addChatMessage(message, isOpponent) {
     const chatMessage = document.createElement("DIV");
     chatMessage.classList.add(isOpponent ? "chat__message-opponent" : "chat__message");
@@ -205,7 +210,7 @@ function gotConnection(conn) {
                 break;
             }
             case "progress": {
-                document.getElementById("progress-opponent").innerText = data.message;
+                setProgress(data.message, true);
                 break;
             }
             case "chat": {
@@ -331,9 +336,9 @@ async function refreshOutputDiff() {
         targetImageData
     );
 
-    const progress = Math.round(similarity * 100) + "%";
-    document.getElementById("progress").innerText = progress;
-    sendMessage("progress", progress);
+    const percentage = Math.round(similarity * 100) + "%";
+    setProgress(percentage);
+    sendMessage("progress", percentage);
 
     outputDiff.innerHTML = "";
     outputDiff.appendChild(getCanvasFromImageData(imageData));

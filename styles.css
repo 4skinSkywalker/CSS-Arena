@@ -67,11 +67,22 @@ body {
     font-size: 0.9rem;
 }
 
-.body__label>.hr {
-    margin-top: 5px;
+.body__label>[id^="progressbar"] {
     flex-grow: 1;
-    height: 1px;
-    background: #333;
+    height: 1.25rem;
+    border: 1px solid #323f4a;
+}
+  
+.body__label>[id^="progressbar"] .bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(gold, #c85, gold);
+    background-repeat: repeat;
+    box-shadow: 0 0 10px 0px orange;
+    animation: 
+        shine 4s ease-in infinite,
+        end 1s ease-out 1;
+    transition: width 3s ease;
 }
 
 .body__editor,
@@ -205,6 +216,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    cursor: pointer;
 }
 
 .chat__title {
@@ -269,4 +281,14 @@ body {
     all: unset;
     padding: 0.5rem;
     width: 100%;
+}
+
+@keyframes shine {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 50px; }
+}
+  
+@keyframes end {
+    0%, 100% { box-shadow: 0 0 10px 0px orange; }
+    50% { box-shadow: 0 0 15px 5px orange; }
 }
