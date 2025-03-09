@@ -98,8 +98,20 @@ async function editorChangeHandler() {
 
 function initEditor() {
     editor = ace.edit("ace-editor");
-    editor.getSession().setUseWorker(false);
     editor.setTheme("ace/theme/monokai");
+
+    ace.require("ace/ext/emmet").setCore("ext/emmet_core");
+    ace.config.loadModule("ace/snippets/html", () => console.log("HTML snippets loaded."));
+    ace.config.loadModule("ace/snippets/css", () => console.log("CSS snippets loaded."));
+
+    editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableSnippets: true,
+        enableLiveAutocompletion: true,
+        enableEmmet: true,
+    });
+
+    editor.getSession().setUseWorker(false);
     editor.getSession().setMode("ace/mode/html");
     editor.getSession().on("change", editorChangeHandler);
 
