@@ -57,11 +57,24 @@ async function connect() {
             handleConnection(peerManager._conn);
             peerManager._tryToConnect = false;
         });
+
+        peerManager._conn.on("data", () => {
+            console.error("Was this called?");
+        });
     }, 2000);
 }
 
 function handleConnection(conn) {
-    conn.on("data", function (data) {
+    let typeOfConn;
+    if (conn === peerManager._conn) {
+        typeOfConn = "outgoing connection";
+    } else {
+        typeOfConn = "incoming connection";
+    }
+    console.warn("Type of connection", typeOfConn);
+
+    conn.on("data", data => {
+        console.warn("Data received via", typeOfConn);
         const { topic, message } = JSON.parse(data);
         emit("messageReceived", { topic, message });
     });
