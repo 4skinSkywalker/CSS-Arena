@@ -107,7 +107,7 @@ function initEditor() {
     if (lastEditorContent) {
         editor.setValue(lastEditorContent);
     } else {
-        editor.setValue(`<div></div>\n<style>\n  div {\n    width: 100px;\n    height: 100px;\n    background: #dd6b4d;\n  }\n</style>`);
+        editor.setValue(`<div></div>\n<style>\n\tdiv {\n\t\twidth: 100px;\n\t\theight: 100px;\n\t\tbackground: #dd6b4d;\n\t}\n</style>`);
     }
 }
 
