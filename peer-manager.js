@@ -1,15 +1,16 @@
-import { delay } from "/util.js";
-
 export const peerManager = {
     on,
     init,
     sendMessage,
-    _hostId: null,
-    _guestId: null,
-    _conn: null,
+    statusUpdates: [],
     _peer: null,
-    _tryToConnect: false,
+    _inConn: null,
+    _outConn: null,
+    _tryConn: null,
 };
+
+const pMan = peerManager;
+window.pMan = pMan;
 
 const listeners = {};
 function on(evt, cb) {
@@ -28,68 +29,80 @@ function emit(evt, data) {
     listeners[evt].forEach(cb => cb(data));
 }
 
-function init(hostId, guestId) {
-    peerManager._hostId = hostId;
-    peerManager._guestId = guestId;
-    peerManager._peer = new Peer(peerManager._hostId);
-    peerManager._peer.on("connection", handleConnection);
-    connect();
+function sendStatusUpdate(status) {
+    pMan.statusUpdates.push(status);
+    emit("statusUpdate", status);
 }
 
-async function connect() {
-    emit("statusUpdate", "Connecting...");
+function init(myId, opponentId) {
+    pMan._peer = new Peer(myId);
+    pMan._peer.on("connection", handleInConn);
+    createOutConn(opponentId);
+}
 
-    peerManager._tryToConnect = true;
+async function createOutConn(opponentId) {
+    sendStatusUpdate(`Creating outgoing connection to ${opponentId}`);
+
+    pMan._tryConn = true;
     const timer = setInterval(() => {
-        if (!peerManager._tryToConnect) {
+        if (!pMan._tryConn) {
             return clearInterval(timer);
         }
 
-        if (peerManager._conn) {
-            peerManager._conn.removeAllListeners();
+        if (pMan._outConn) {
+            pMan._outConn.removeAllListeners();
         }
 
-        emit("statusUpdate", "Looking for the other participant...");
-        peerManager._conn = peerManager._peer.connect(peerManager._guestId);
+        sendStatusUpdate(`Pinging ${opponentId}`);
+        pMan._outConn = pMan._peer.connect(opponentId);
 
-        peerManager._conn.on("open", () => {
-            emit("statusUpdate", "Connection to the other participant established!");
-            handleConnection(peerManager._conn);
-            peerManager._tryToConnect = false;
+        pMan._outConn.on("open", () => {
+            pMan._tryConn = false;
+            sendStatusUpdate(`Established outgoing connection to ${opponentId}`);
+            emit("connected");
         });
 
-        peerManager._conn.on("data", () => {
-            console.error("Was this called?");
+        pMan._outConn.on("close", async () => {
+            sendStatusUpdate(`Disconnected from ${opponentId}`);
+            pMan._outConn = null;
+            createOutConn(opponentId);
         });
     }, 2000);
 }
 
-function handleConnection(conn) {
-    let typeOfConn;
-    if (conn === peerManager._conn) {
-        typeOfConn = "outgoing connection";
-    } else {
-        typeOfConn = "incoming connection";
+async function handleInConn(conn) {
+    if (pMan._inConn) {
+        sendStatusUpdate(`Already connected to ${conn.peer}`);
     }
-    console.warn("Type of connection", typeOfConn);
+
+    pMan._inConn = conn;
+    sendStatusUpdate(`Incoming connection with ${conn.peer}`);
+
+    if (!pMan._tryConn && !pMan._outConn) {
+        sendStatusUpdate(`No outgoing connection to ${conn.peer}`);
+        createOutConn(conn.peer);
+    }
+
+    conn.on("open", () => {
+        sendStatusUpdate(`Established incoming connection with ${conn.peer}`);
+        emit("connected");
+    });
 
     conn.on("data", data => {
-        console.warn("Data received via", typeOfConn);
-        const { topic, message } = JSON.parse(data);
-        emit("messageReceived", { topic, message });
+        emit("messageReceived", JSON.parse(data));
     });
 
     conn.on("close", async () => {
-        emit("statusUpdate", "Disconnected.");
-        await delay(2);
-        connect();
+        sendStatusUpdate(`Disconnected from ${conn.peer}`);
+        pMan._inConn = null;
+        createOutConn(conn.peer);
     });
-
-    emit("connected");
 }
 
 function sendMessage(topic, message) {
-    if (peerManager._conn) {
-        peerManager._conn.send(JSON.stringify({ topic, message }));
+    if (!pMan._outConn) {
+        setTimeout(() => sendMessage(topic, message), 2000);
+        return;
     }
+    pMan._outConn.send(JSON.stringify({ topic, message }));
 }

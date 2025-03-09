@@ -6,9 +6,14 @@ import { peerManager } from "/peer-manager.js";
 let lastEditorContent = "";
 let editor = null;
 
-function getOpponentId(playerId) {
-    const [uid, playerNumber] = [playerId.slice(0, -1), playerId.slice(-1)];
-    return `${uid}${playerNumber === "1" ? "2" : "1"}`;
+function readUid() {
+    const fullUid = getUrlAttr("uid");
+    const [uid, playerNumber] = [fullUid.slice(0, -1), fullUid.slice(-1)];
+    return { uid, playerNumber };
+}
+
+function isHost() {
+    return readUid().playerNumber === "1";
 }
 
 function setConnectionStatus(status) {
@@ -46,15 +51,13 @@ function initConnection() {
         }
     });
 
-    const hostId = getUrlAttr("uid");
-    const guestId = getOpponentId(getUrlAttr("uid"));
-    peerManager.init(hostId, guestId);
+    peerManager.init(getUrlAttr("uid"), readUid().uid + (isHost() ? "2" : "1"));
 }
 
 function genShareLink() {
     const linkEl = document.getElementById("share-link");
     linkEl.style.display = "inline-block";
-    linkEl.href = `?battle=${getUrlAttr("battle")}&uid=${getOpponentId(getUrlAttr("uid"))}`;
+    linkEl.href = `?battle=${getUrlAttr("battle")}&uid=${readUid().uid + 2}`;
 }
 
 function getLastContentKey() {
@@ -188,6 +191,8 @@ function bindEvents() {
 (async function () {
     if (!getUrlAttr("uid")) {
         upsertUrlAttr("uid", `${getUid()}1`);
+    }
+    if (isHost()) {
         genShareLink();
     }
     initConnection();
