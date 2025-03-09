@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Arena - Ring</title>
+    <link rel="stylesheet" href="./ring.css">
+    <script src="/assets/ace/src-min-noconflict/ace.js" defer></script>
+    <script src="/assets/scripts/dom-to-image.min.js" defer></script>
+    <script src="/assets/scripts/peerjs.min.js" defer></script>
+    <script src="/assets/scripts/color.js" defer></script>
+    <script type="module" src="./ring.js" defer></script>
+</head>
+
+<body>
+    <div class="ring">
+        <div class="ring__editor">
+            <div class="ring__editor-header">
+                <div>Editor</div>
+                <div>
+                    <input type="checkbox" id="vim-mode">
+                    <label for="vim-mode">Vim mode</label>
+                </div>
+            </div>
+
+            <div class="ring__editor-body">
+                <div id="ace-editor"></div>
+            </div>
+        </div>
+
+        <div class="ring__output">
+            <div class="ring__output-header">
+                <div>Output</div>
+                <div>
+                    <input type="checkbox" id="show-diff">
+                    <label for="show-diff">Diff</label>
+                </div>
+            </div>
+
+            <div class="ring__output-body">
+                <div class="ring__label">
+                    <span>Your output</span>
+                    <app-progressbar id="progressbar"></app-progressbar>
+                    <span id="progress">0%</span>
+                </div>
+
+                <div id="output-wrap">
+                    <iframe id="output-iframe" frameborder="0"></iframe>
+                    <div id="output-diff"></div>
+                </div>
+
+                <div class="ring__label">
+                    <span>Opponent output</span>
+                    <app-progressbar id="progressbar-opponent"></app-progressbar>
+                    <span id="progress-opponent">0%</span>
+                </div>
+
+                <iframe id="output-iframe-opponent" frameborder="0"></iframe>
+            </div>
+        </div>
+
+        <div class="ring__target">
+            <div class="ring__target-header">
+                <div>Target</div>
+            </div>
+
+            <div class="ring__target-body">
+                <div class="ring__label">
+                    <span>Recreate this target</span>
+                    <div class="hr"></div>
+                </div>
+
+                <img id="target-img" src="/assets/img/placeholder.png" alt="Target image">
+
+                <div id="target-colors"></div>
+
+                <a id="share-link" href="#" target="_blank">Invite link</a>
+
+                <div id="connection-status"></div>
+
+                <app-chat id="chat"></app-chat>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

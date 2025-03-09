@@ -1,0 +1,186 @@
+import { Chat } from "../../components/chat.js";
+import { Progressbar } from "../../components/progressbar.js";
+import { delay, copyToClipboard, sanitizeHtml, writeIntoIframe, getUid, getUrlAttr, upsertUrlAttr, getPixelDiff, getImageDataFromDiv, getCanvasFromImageData, saveIntoLS, loadFromLS } from "/util.js";
+import { peerManager } from "/peer-manager.js";
+
+let lastEditorContent = "";
+let editor = null;
+
+function getOpponentId(playerId) {
+    const [uid, playerNumber] = [playerId.slice(0, -1), playerId.slice(-1)];
+    return `${uid}${playerNumber === "1" ? "2" : "1"}`;
+}
+
+function setConnectionStatus(status) {
+    document.getElementById("connection-status").innerText = status;
+}
+
+function setProgress(percentage, isOpponent) {
+    const suffix = isOpponent ? "-opponent" : "";
+    document.getElementById(`progressbar${suffix}`).setProgress(percentage);
+    document.getElementById(`progress${suffix}`).innerText = percentage;
+}
+
+function initConnection() {
+    peerManager.on("statusUpdate", setConnectionStatus);
+    peerManager.on("connected", () => {
+        peerManager.sendMessage("lastEditorContent", lastEditorContent);
+    });
+    peerManager.on("messageReceived", ({ topic, message }) => {
+        switch (topic) {
+            case "lastEditorContent": {
+                writeIntoIframe("output-iframe-opponent", message);
+                break;
+            }
+            case "progress": {
+                setProgress(message, true);
+                break;
+            }
+            case "chat": {
+                document.getElementById("chat").addChatMessage(message, true);
+                break;
+            }
+            default: {
+                console.warn("Unknown topic", topic);
+            }
+        }
+    });
+
+    const hostId = getUrlAttr("uid");
+    const guestId = getOpponentId(getUrlAttr("uid"));
+    peerManager.init(hostId, guestId);
+}
+
+function genShareLink() {
+    const linkEl = document.getElementById("share-link");
+    linkEl.style.display = "inline-block";
+    linkEl.href = `?battle=${getUrlAttr("battle")}&uid=${getOpponentId(getUrlAttr("uid"))}`;
+}
+
+function getLastContentKey() {
+    return `editor-content_${getUrlAttr("uid")}`;
+}
+
+async function refreshOutputDiff() {
+    const targetImg = document.getElementById("target-img");
+    const outputDiff = document.getElementById("output-diff");
+    const outputIframe = document.querySelector('#output-iframe');
+    const outputIframeBody = outputIframe.contentWindow.document.body;
+
+    const outputIframeImageData = await getImageDataFromDiv(outputIframeBody);
+    const targetImageDataFromDiv = await getImageDataFromDiv(targetImg);
+
+    if (!outputIframeImageData || !targetImageDataFromDiv) {
+        return;
+    }
+
+    const { imageData, similarity } = getPixelDiff(
+        outputIframeImageData,
+        targetImageDataFromDiv
+    );
+
+    const percentage = Math.round(similarity * 100) + "%";
+    setProgress(percentage);
+    peerManager.sendMessage("progress", percentage);
+
+    outputDiff.innerHTML = "";
+    outputDiff.appendChild(getCanvasFromImageData(imageData));
+}
+
+async function editorChangeHandler() {
+    lastEditorContent = sanitizeHtml(editor.getSession().getValue());
+    saveIntoLS(getLastContentKey(), lastEditorContent);
+    peerManager.sendMessage("lastEditorContent", lastEditorContent);
+    writeIntoIframe("output-iframe", lastEditorContent);
+    await delay(0.15);
+    refreshOutputDiff();
+}
+
+function initEditor() {
+    editor = ace.edit("ace-editor");
+    editor.getSession().setUseWorker(false);
+    editor.setTheme("ace/theme/monokai");
+    editor.getSession().setMode("ace/mode/html");
+    editor.getSession().on("change", editorChangeHandler);
+
+    lastEditorContent = loadFromLS(getLastContentKey()) || "";
+    if (lastEditorContent) {
+        editor.setValue(lastEditorContent);
+    } else {
+        editor.setValue(`<div></div>\n<style>\n  div {\n    width: 100px;\n    height: 100px;\n    background: #dd6b4d;\n  }\n</style>`);
+    }
+}
+
+function getColorEl(bg) {
+    const newEl = document.createElement("DIV");
+    newEl.innerHTML = `
+        <div class="color">
+            <div class="color__circle" style="background: ${bg};"></div>
+            <div class="color__code">${bg}</div>
+        </div>
+    `;
+    const colorEl = newEl.querySelector(".color");
+
+    colorEl.addEventListener("click", () => {
+        const colorCode = colorEl.querySelector(".color__code");
+        const prevText = colorCode.innerText;
+        if (prevText === "Copied!") {
+            return;
+        }
+        copyToClipboard(prevText);
+        colorCode.innerText = "Copied!"
+        setTimeout(() => colorCode.innerText = prevText, 2000);
+    });
+
+    return colorEl;
+}
+
+async function sampleColors() {
+    const colorsEl = document.getElementById("target-colors");
+    const imgEl = document.getElementById("target-img");
+    const colors = await colorjs.prominent(imgEl, { amount: 10, format: "hex", sample: 1 });
+    for (const color of colors) {
+        colorsEl.appendChild(getColorEl(color));
+    }
+}
+
+async function initTargetImage() {
+    const targetImg = document.getElementById("target-img");
+    const battleId = getUrlAttr("battle");
+    await new Promise(res => targetImg.onload = res, targetImg.src = `/assets/img/${battleId}.png`);
+}
+
+function bindVimMode() {
+    const el = document.getElementById("vim-mode");
+    el.addEventListener("click", () => {
+        if (!el.checked) {
+            editor.setKeyboardHandler(null);
+        } else {
+            editor.setKeyboardHandler("ace/keyboard/vim");
+        }
+    });
+}
+
+function bindChat() {
+    const chatEl = document.getElementById("chat");
+    chatEl.addEventListener("chatMessageSend", evt => {
+        peerManager.sendMessage("chat", evt.detail.message);
+    });
+}
+
+function bindEvents() {
+    bindVimMode();
+    bindChat();
+}
+
+(async function () {
+    if (!getUrlAttr("uid")) {
+        upsertUrlAttr("uid", `${getUid()}1`);
+        genShareLink();
+    }
+    initConnection();
+    initEditor();
+    await initTargetImage();
+    sampleColors();
+    bindEvents();
+})();
