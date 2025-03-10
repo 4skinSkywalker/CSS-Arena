@@ -39,7 +39,7 @@ function sendMessage(topic, message) {
 }
 
 function initConnection() {
-    ws = new WebSocket("wss://css-arena-production.up.railway.app:8080");
+    ws = new WebSocket("ws://css-arena-production.up.railway.app");
 
     ws.onopen = () => {
         setConnectionStatus("Waiting for a peer to connect...");
