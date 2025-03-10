@@ -1,7 +1,7 @@
-const WebSocket = require("ws");
+const { WebSocketServer } = require("ws");
 
-const port = Number(process.env.PORT);
-const server = new WebSocket.Server({ port });
+const port = Number(process.env.PORT || 3000);
+const wss = new WebSocketServer({ port });
 
 const clients = {};
 
@@ -44,7 +44,7 @@ function handleMessage(message){
     }
 }
 
-server.on("connection", ws => {
+wss.on("connection", ws => {
     ws.once("message", message => {
         try {
             const parsed = parseMessage(message);
