@@ -20,5 +20,5 @@ const wss = new WebSocketServer({server: server});
 console.log("websocket server created");
 
 wss.on("connection", ws => {
-    ws.once("message", handleConnection);
+    ws.once("message", message => handleConnection(ws, message));
 });

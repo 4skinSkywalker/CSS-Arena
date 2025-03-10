@@ -39,7 +39,7 @@ function handleMessage(message){
     }
 }
 
-function handleConnection(message) {
+function handleConnection(ws, message) {
     try {
         const parsed = parseMessage(message);
 
