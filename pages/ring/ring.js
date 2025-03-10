@@ -39,8 +39,8 @@ function sendMessage(topic, message) {
 }
 
 function initConnection() {
-    // ws = new WebSocket("wss://css-arena-13a0033b74e5.herokuapp.com");
-    ws = new WebSocket("ws://localhost:5000");
+    ws = new WebSocket("wss://css-arena-13a0033b74e5.herokuapp.com");
+    // ws = new WebSocket("ws://localhost:5000");
 
     ws.onopen = () => {
         setConnectionStatus("Waiting for a peer to connect...");
