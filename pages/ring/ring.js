@@ -55,12 +55,13 @@ function initConnection() {
         switch (topic) {
             case "handshake": {
                 console.log("ws.handshake");
-                setConnectionStatus("Connected to peer!");
+                setConnectionStatus("Handshake complete!");
                 sendMessage("lastEditorContent", lastEditorContent);
                 break;
             }
             case "lastEditorContent": {
                 console.log("ws.lastEditorContent");
+                setConnectionStatus("Received editor content from peer!");
                 writeIntoIframe("output-iframe-opponent", message);
                 break;
             }
@@ -71,6 +72,7 @@ function initConnection() {
             }
             case "chat": {
                 console.log("ws.chat");
+                setConnectionStatus("Received chat message from peer!");
                 document.getElementById("chat").addChatMessage(message, true);
                 break;
             }
