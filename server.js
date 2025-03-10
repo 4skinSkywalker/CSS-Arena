@@ -1,7 +1,8 @@
-const { WebSocketServer } = require("ws");
-
-const port = Number(process.env.PORT || 3000);
-const wss = new WebSocketServer({ port });
+const WebSocketServer = require("ws").Server;
+const http = require("http");
+const express = require("express");
+const app = express();
+const port = process.env.PORT || 5000;
 
 const clients = {};
 
@@ -11,6 +12,12 @@ const availableTopic = new Set([
     "progress",
     "chat"
 ]);
+
+app.use(express.static(__dirname + "/"));
+
+const server = http.createServer(app);
+server.listen(port);
+console.log("http server listening on %d", port);
 
 function parseMessage(message) {
     return JSON.parse(Buffer.from(message).toString("utf-8"));
@@ -44,6 +51,9 @@ function handleMessage(message){
     }
 }
 
+const wss = new WebSocketServer({server: server});
+console.log("websocket server created");
+
 wss.on("connection", ws => {
     ws.once("message", message => {
         try {
@@ -52,7 +62,7 @@ wss.on("connection", ws => {
             if (
                 !parsed.from ||
                 typeof parsed.from !== "string" ||
-                parsed.from.length > 13
+                parsed.from.length > 14
             ) {
                 throw new Error("Missing or invalid from field");
             }
@@ -81,5 +91,3 @@ wss.on("connection", ws => {
         }
     });
 });
-
-console.log(`WebSocket server running on port ${port}`);
