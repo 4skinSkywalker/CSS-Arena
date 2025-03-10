@@ -39,7 +39,7 @@ function sendMessage(topic, message) {
 }
 
 function initConnection() {
-    ws = new WebSocket("wss://css-arena.herokuapp.com:3000");
+    ws = new WebSocket("wss://css-arena-13a0033b74e5.herokuapp.com:39169");
     // ws = new WebSocket("ws://localhost:3000");
 
     ws.onopen = () => {
