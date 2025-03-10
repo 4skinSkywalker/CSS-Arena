@@ -1,6 +1,6 @@
 import { Chat } from "../../components/chat.js";
 import { Progressbar } from "../../components/progressbar.js";
-import { delay, copyToClipboard, sanitizeHtml, writeIntoIframe, getUid, getUrlAttr, upsertUrlAttr, getPixelDiff, getImageDataFromDiv, getCanvasFromImageData, saveIntoLS, loadFromLS } from "/util.js";
+import { delay, copyToClipboard, sanitizeHtml, writeIntoIframe, getUid, getUrlAttr, upsertUrlAttr, getPixelDiff, getImageDataFromDiv, getCanvasFromImageData, saveIntoLS, loadFromLS } from "/utils.js";
 
 let ws;
 let wsReady = false;
