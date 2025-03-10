@@ -1,3 +1,5 @@
+const { getImageFromHtml } = require("./puppeteer-utils");
+
 const clients = {};
 
 const availableTopic = new Set([
@@ -11,17 +13,34 @@ function parseMessage(message) {
     return JSON.parse(Buffer.from(message).toString("utf-8"));
 }
 
-function handleMessage(message){
+function handleMessage(message) {
     try {
         const parsed = parseMessage(message);
 
         if (
             !parsed.topic ||
-            !availableTopic.has(parsed.topic) ||
-            !parsed.message ||
-            typeof parsed.message !== "string"
+            typeof parsed.topic !== "string" ||
+            !availableTopic.has(parsed.topic)
         ) {
-            throw new Error("Missing or invalid topic or message");
+            throw new Error("Missing or invalid topic");
+        }
+
+        if (
+            !parsed.message ||
+            typeof parsed.message !== "string" ||
+            parsed.message.length > 5000
+        ) {
+            throw new Error("Missing or invalid message");
+        }
+
+        if (parsed.topic === "lastEditorContent") {
+            getImageFromHtml(parsed.message).then(b64 => {
+                clients[parsed.from].send(JSON.stringify({
+                    from: parsed.from,
+                    topic: "imageForDiff",
+                    message: b64
+                }));
+            });
         }
 
         const to = parsed.from.split("").reverse().join("");
@@ -34,7 +53,7 @@ function handleMessage(message){
             topic: parsed.topic,
             message: parsed.message
         }));
-    } catch(e) {
+    } catch (e) {
         console.error(e);
     }
 }
@@ -70,7 +89,7 @@ function handleConnection(ws, message) {
             console.log(`Connection of ${parsed.from} closed`);
             delete clients[ws.clientId];
         });
-    } catch(e) {
+    } catch (e) {
         console.error(e);
     }
 }

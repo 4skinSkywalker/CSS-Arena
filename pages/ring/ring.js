@@ -1,6 +1,6 @@
 import { Chat } from "../../components/chat.js";
 import { Progressbar } from "../../components/progressbar.js";
-import { delay, copyToClipboard, sanitizeHtml, writeIntoIframe, getUid, getUrlAttr, upsertUrlAttr, getPixelDiff, getImageDataFromDiv, getCanvasFromImageData, saveIntoLS, loadFromLS } from "/utils.js";
+import { debounce, copyToClipboard, writeIntoIframe, getUid, getUrlAttr, upsertUrlAttr, getPixelDiff, getImageDataFromImg, getCanvasFromImageData, saveIntoLS, loadFromLS } from "/utils.js";
 
 let ws;
 let wsReady = false;
@@ -39,8 +39,8 @@ function sendMessage(topic, message) {
 }
 
 function initConnection() {
-    ws = new WebSocket("wss://css-arena-13a0033b74e5.herokuapp.com");
-    // ws = new WebSocket("ws://localhost:5000");
+    // ws = new WebSocket("wss://css-arena-13a0033b74e5.herokuapp.com");
+    ws = new WebSocket("ws://localhost:5000");
 
     ws.onopen = () => {
         setConnectionStatus("Waiting for a peer to connect...");
@@ -76,6 +76,12 @@ function initConnection() {
                 document.getElementById("chat").addChatMessage(message, true);
                 break;
             }
+            case "imageForDiff": {
+                console.log("ws.imageForDiff");
+                document.getElementById("output-img").src = `data:image/png;base64, ${message}`;
+                document.getElementById("output-img").onload = refreshDiff;
+                break;
+            }
             default: {
                 console.warn("Unknown topic", topic);
             }
@@ -97,23 +103,19 @@ function getLastContentKey() {
     return `editor-content_${getMyId()}`;
 }
 
-async function refreshOutputDiff() {
+async function refreshDiff() {
+    const outputImg = document.getElementById("output-img");
     const targetImg = document.getElementById("target-img");
     const outputDiff = document.getElementById("output-diff");
-    const outputIframe = document.querySelector('#output-iframe');
-    const outputIframeBody = outputIframe.contentWindow.document.body;
 
-    const outputIframeImageData = await getImageDataFromDiv(outputIframeBody);
-    const targetImageDataFromDiv = await getImageDataFromDiv(targetImg);
+    const outputImgData = await getImageDataFromImg(outputImg);
+    const targetImgData = await getImageDataFromImg(targetImg);
 
-    if (!outputIframeImageData || !targetImageDataFromDiv) {
+    if (!outputImgData || !targetImgData) {
         return;
     }
 
-    const { imageData, similarity } = getPixelDiff(
-        outputIframeImageData,
-        targetImageDataFromDiv
-    );
+    const { imageData, similarity } = getPixelDiff(outputImgData, targetImgData);
 
     const percentage = Math.round(similarity * 100) + "%";
     setProgress(percentage);
@@ -124,12 +126,10 @@ async function refreshOutputDiff() {
 }
 
 async function editorChangeHandler() {
-    lastEditorContent = sanitizeHtml(editor.getSession().getValue());
+    lastEditorContent = DOMPurify.sanitize(editor.getSession().getValue());
     saveIntoLS(getLastContentKey(), lastEditorContent);
     sendMessage("lastEditorContent", lastEditorContent);
     writeIntoIframe("output-iframe", lastEditorContent);
-    await delay(0.15);
-    refreshOutputDiff();
 }
 
 function initEditor() {
@@ -149,7 +149,8 @@ function initEditor() {
 
     editor.getSession().setUseWorker(false);
     editor.getSession().setMode("ace/mode/html");
-    editor.getSession().on("change", editorChangeHandler);
+    const debouncedEditorChangeHandler = debounce(editorChangeHandler, 300);
+    editor.getSession().on("change", debouncedEditorChangeHandler);
 
     lastEditorContent = loadFromLS(getLastContentKey()) || "";
     if (lastEditorContent) {

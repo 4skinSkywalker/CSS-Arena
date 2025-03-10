@@ -2,6 +2,16 @@ export async function delay(s) {
     return new Promise(res => setTimeout(res, s * 1000));
 }
 
+export function debounce(callback, wait) {
+    let timeoutId = null;
+    return (...args) => {
+        window.clearTimeout(timeoutId);
+        timeoutId = window.setTimeout(() => {
+            callback(...args);
+        }, wait);
+    };
+}
+
 export function saveIntoLS(key, val) {
     window.localStorage.setItem(key, val);
 }
@@ -19,23 +29,14 @@ export function copyToClipboard(text) {
     document.body.removeChild(dummy);
 }
 
-export function sanitizeHtml(html) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-    const scriptElements = doc.getElementsByTagName("script");
-    [...scriptElements].forEach((s) => s.remove());
-    return doc.body.innerHTML;
-}
-
 export function writeIntoIframe(id, _content) {
-    const content = `<html><head></head><body>${sanitizeHtml(_content)}</body></html>`;
+    const content = `<html><head></head><body>${DOMPurify.sanitize(_content)}</body></html>`;
     const iframe = document.getElementById(id);
     iframe.contentWindow.document.open();
     iframe.contentWindow.document.write(content);
     iframe.contentWindow.document.close();
 
     const iframeBody = iframe.contentWindow.document.body;
-    iframeBody.style.margin = "0";
     iframeBody.style.width = "400px";
     iframeBody.style.height = "300px";
     iframeBody.style.overflow = "hidden";
@@ -98,22 +99,13 @@ export function getPixelDiff(data1, data2, threshold = 10) {
     };
 }
 
-export async function getImageDataFromDiv(div) {
-    try {
-        const dataUrl = await domtoimage.toPng(div);
-        const img = new Image();
-        const canvas = document.createElement("CANVAS");
-        canvas.width = 400;
-        canvas.height = 300;
-        const ctx = canvas.getContext("2d", { willReadFrequently: true });
-        await new Promise(res => img.onload = res, img.src = dataUrl);
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, 400, 300);
-        return imageData;
-    } catch (e) {
-        console.error(e);
-        return null;
-    }
+export function getImageDataFromImg(img) {
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+    return ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
 export function getCanvasFromImageData(imageData) {
