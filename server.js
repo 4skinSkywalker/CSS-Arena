@@ -5,15 +5,33 @@ const server = new WebSocket.Server({ port: PORT });
 
 const clients = {};
 
-function handleMessage(parsed){
+const availableTopic = new Set([
+    "handshake",
+    "lastEditorContent",
+    "progress",
+    "chat"
+]);
+
+function parseMessage(message) {
+    return JSON.parse(Buffer.from(message).toString("utf-8"));
+}
+
+function handleMessage(message){
     try {
-        if (!parsed.topic || !parsed.message) {
-            throw new Error("Invalid message");
+        const parsed = parseMessage(message);
+
+        if (
+            !parsed.topic ||
+            !availableTopic.has(parsed.topic) ||
+            !parsed.message ||
+            typeof parsed.message !== "string"
+        ) {
+            throw new Error("Missing or invalid topic or message");
         }
-        
+
         const to = parsed.from.split("").reverse().join("");
         if (!clients[to]) {
-            throw new Error("Cannot find peer");
+            throw new Error(`Cannot send message to ${to}`);
         }
 
         clients[to].send(JSON.stringify({
@@ -28,29 +46,34 @@ function handleMessage(parsed){
 
 server.on("connection", ws => {
     ws.once("message", message => {
-        console.log("First message received");
-
         try {
-            message = Buffer.from(message).toString("utf-8");
-            
-            const parsed = JSON.parse(message);
-            if (!parsed.from || parsed.from.length > 13) {
-                throw new Error("Invalid message");
+            const parsed = parseMessage(message);
+
+            if (
+                !parsed.from ||
+                typeof parsed.from !== "string" ||
+                parsed.from.length > 13
+            ) {
+                throw new Error("Missing or invalid from field");
             }
 
-            if (clients[parsed.from]) {
-                clients[parsed.from].close();
+            if (
+                clients[parsed.from] &&
+                clients[parsed.from].readyState === WebSocket.OPEN
+            ) {
+                console.log(`Client ${parsed.from} already connected`);
+                return;
             }
 
             clients[parsed.from] = ws;
             ws.clientId = parsed.from;
 
-            handleMessage(parsed);
+            handleMessage(message, parsed.from);
 
-            ws.on("message", () => handleMessage(parsed));
+            ws.on("message", message => handleMessage(message, parsed.from));
 
             ws.on("close", () => {
-                console.log("Connection closed");
+                console.log(`Connection of ${parsed.from} closed`);
                 delete clients[ws.clientId];
             });
         } catch(e) {
@@ -60,17 +83,3 @@ server.on("connection", ws => {
 });
 
 console.log(`WebSocket server running on port ${PORT}`);
-
-// const ws = new WebSocket("ws://localhost:3000");
-
-// ws.onopen = () => {
-//     console.log("Connected to WebSocket server");
-// };
-
-// ws.onmessage = event => {
-//     console.log("Message from server:", event.data);
-// };
-
-// ws.onclose = () => {
-//     console.log("Disconnected from WebSocket server");
-// };

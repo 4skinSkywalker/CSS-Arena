@@ -1,19 +1,23 @@
 import { Chat } from "../../components/chat.js";
 import { Progressbar } from "../../components/progressbar.js";
 import { delay, copyToClipboard, sanitizeHtml, writeIntoIframe, getUid, getUrlAttr, upsertUrlAttr, getPixelDiff, getImageDataFromDiv, getCanvasFromImageData, saveIntoLS, loadFromLS } from "/util.js";
-import { peerManager } from "/peer-manager.js";
 
+let ws;
+let wsReady = false;
+let editor;
 let lastEditorContent = "";
-let editor = null;
 
-function readUid() {
-    const fullUid = getUrlAttr("uid");
-    const [uid, playerNumber] = [fullUid.slice(0, -1), fullUid.slice(-1)];
-    return { uid, playerNumber };
+function getMyId() {
+    return getUrlAttr("uid");
+}
+
+function getOpponentId() {
+    return getUrlAttr("uid").split("").reverse().join("");
 }
 
 function isHost() {
-    return readUid().playerNumber === "1";
+    const uid = getMyId();
+    return uid[0] === "d" && uid[uid.length - 1] === "b";
 }
 
 function setConnectionStatus(status) {
@@ -26,22 +30,46 @@ function setProgress(percentage, isOpponent) {
     document.getElementById(`progress${suffix}`).innerText = percentage;
 }
 
+function sendMessage(topic, message) {
+    if (!ws || !wsReady) {
+        console.error("Either ws doesn't exists or is not connected");
+        return;
+    }
+    ws.send(JSON.stringify({ from: getMyId(), topic, message }));
+}
+
 function initConnection() {
-    peerManager.on("statusUpdate", setConnectionStatus);
-    peerManager.on("connected", () => {
-        peerManager.sendMessage("lastEditorContent", lastEditorContent);
-    });
-    peerManager.on("messageReceived", ({ topic, message }) => {
+    ws = new WebSocket("ws://css-arena-production.up.railway.app:3000");
+
+    ws.onopen = () => {
+        setConnectionStatus("Waiting for a peer to connect...");
+        console.log("ws.open");
+        wsReady = true;
+        sendMessage("handshake", getMyId());
+        sendMessage("lastEditorContent", lastEditorContent);
+    };
+
+    ws.onmessage = ({ data }) => {
+        const { topic, message } = JSON.parse(data);
         switch (topic) {
+            case "handshake": {
+                console.log("ws.handshake");
+                setConnectionStatus("Connected to peer!");
+                sendMessage("lastEditorContent", lastEditorContent);
+                break;
+            }
             case "lastEditorContent": {
+                console.log("ws.lastEditorContent");
                 writeIntoIframe("output-iframe-opponent", message);
                 break;
             }
             case "progress": {
+                console.log("ws.progress");
                 setProgress(message, true);
                 break;
             }
             case "chat": {
+                console.log("ws.chat");
                 document.getElementById("chat").addChatMessage(message, true);
                 break;
             }
@@ -49,19 +77,21 @@ function initConnection() {
                 console.warn("Unknown topic", topic);
             }
         }
-    });
+    };
 
-    peerManager.init(getUrlAttr("uid"), readUid().uid + (isHost() ? "2" : "1"));
+    ws.onclose = () => {
+        wsReady = false;
+    };
 }
 
 function genShareLink() {
     const linkEl = document.getElementById("share-link");
     linkEl.style.display = "inline-block";
-    linkEl.href = `?battle=${getUrlAttr("battle")}&uid=${readUid().uid + 2}`;
+    linkEl.href = `?battle=${getUrlAttr("battle")}&uid=${getOpponentId()}`;
 }
 
 function getLastContentKey() {
-    return `editor-content_${getUrlAttr("uid")}`;
+    return `editor-content_${getMyId()}`;
 }
 
 async function refreshOutputDiff() {
@@ -84,7 +114,7 @@ async function refreshOutputDiff() {
 
     const percentage = Math.round(similarity * 100) + "%";
     setProgress(percentage);
-    peerManager.sendMessage("progress", percentage);
+    sendMessage("progress", percentage);
 
     outputDiff.innerHTML = "";
     outputDiff.appendChild(getCanvasFromImageData(imageData));
@@ -93,7 +123,7 @@ async function refreshOutputDiff() {
 async function editorChangeHandler() {
     lastEditorContent = sanitizeHtml(editor.getSession().getValue());
     saveIntoLS(getLastContentKey(), lastEditorContent);
-    peerManager.sendMessage("lastEditorContent", lastEditorContent);
+    sendMessage("lastEditorContent", lastEditorContent);
     writeIntoIframe("output-iframe", lastEditorContent);
     await delay(0.15);
     refreshOutputDiff();
@@ -179,7 +209,7 @@ function bindVimMode() {
 function bindChat() {
     const chatEl = document.getElementById("chat");
     chatEl.addEventListener("chatMessageSend", evt => {
-        peerManager.sendMessage("chat", evt.detail.message);
+        sendMessage("chat", evt.detail.message);
     });
 }
 
@@ -189,8 +219,8 @@ function bindEvents() {
 }
 
 (async function () {
-    if (!getUrlAttr("uid")) {
-        upsertUrlAttr("uid", `${getUid()}1`);
+    if (!getMyId()) {
+        upsertUrlAttr("uid", `d${getUid()}b`);
     }
     if (isHost()) {
         genShareLink();

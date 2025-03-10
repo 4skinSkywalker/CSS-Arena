@@ -42,7 +42,11 @@ export function writeIntoIframe(id, _content) {
 }
 
 export function getUid() {
-    return Math.random().toString(36).substring(2, 15);
+    const uid = Math.random().toString(36).substring(2, 15);
+    if (uid[0] === "d" && uid[uid.length - 1] === "b") {
+        return getUid();
+    }
+    return uid;
 }
 
 export function getUrlAttr(name) {
