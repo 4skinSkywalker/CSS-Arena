@@ -81,4 +81,4 @@ server.on("connection", ws => {
     });
 });
 
-console.log(`WebSocket server running on port ${PORT}`);
+console.log(`WebSocket server running on port`);
