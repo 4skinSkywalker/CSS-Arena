@@ -93,15 +93,27 @@ function initConnection() {
     };
 }
 
-function getOriginalTargetLink() {
+function setOriginalTargetLink() {
     const linkEl = document.getElementById("original-target-link");
     linkEl.href = `https://cssbattle.dev/play/${getUrlAttr("battle")}`;
 }
 
-function genShareLink() {
+function setShareLink() {
     const linkEl = document.getElementById("share-link");
     linkEl.style.display = "inline-block";
     linkEl.href = `?battle=${getUrlAttr("battle")}&uid=${getOpponentId()}`;
+
+    linkEl.addEventListener("click", () => {
+        event.preventDefault();
+        
+        const prevText = linkEl.innerText;
+        if (prevText === "Copied!") {
+            return;
+        }
+        copyToClipboard(linkEl.href);
+        linkEl.innerText = "Copied!"
+        setTimeout(() => linkEl.innerText = prevText, 2000);
+    });
 }
 
 function getLastContentKey() {
@@ -232,9 +244,9 @@ function bindEvents() {
         upsertUrlAttr("uid", `d${getUid()}b`);
     }
     if (isHost()) {
-        genShareLink();
+        setShareLink();
     }
-    getOriginalTargetLink();
+    setOriginalTargetLink();
     initConnection();
     initEditor();
     await initTargetImage();
