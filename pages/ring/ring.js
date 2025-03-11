@@ -138,8 +138,7 @@ async function refreshDiff() {
     setProgress(percentage);
     sendMessage("progress", percentage);
 
-    outputDiff.innerHTML = "";
-    outputDiff.appendChild(getCanvasFromImageData(imageData));
+    outputDiff.src = getCanvasFromImageData(imageData).toDataURL("image/png");
 }
 
 async function editorChangeHandler() {
@@ -211,9 +210,25 @@ async function sampleColors() {
 }
 
 async function initTargetImage() {
-    const targetImg = document.getElementById("target-img");
     const battleId = getUrlAttr("battle");
+    
+    const referenceBg = document.getElementById("reference-bg");
+    referenceBg.style.backgroundImage = `url(/assets/img/${battleId}.png)`;
+
+    const targetImg = document.getElementById("target-img");
     await new Promise(res => targetImg.onload = res, targetImg.src = `/assets/img/${battleId}.png`);
+
+    // Setup slide over to compare feature
+    const comparisonEl = document.getElementById("output-compare");
+    const { x, width } = comparisonEl.getBoundingClientRect();
+    comparisonEl.addEventListener("mousemove", mouseEvt => {
+        const mx = mouseEvt.clientX;
+        const perc = (mx - x) / width;
+        referenceBg.style.width = (perc * 100) + "%";
+    });
+    comparisonEl.addEventListener("mouseleave", () => {
+        referenceBg.style.width = "0%";
+    });
 }
 
 function bindVimMode() {
