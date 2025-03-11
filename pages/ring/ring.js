@@ -93,6 +93,11 @@ function initConnection() {
     };
 }
 
+function getOriginalTargetLink() {
+    const linkEl = document.getElementById("original-target-link");
+    linkEl.href = `https://cssbattle.dev/play/${getUrlAttr("battle")}`;
+}
+
 function genShareLink() {
     const linkEl = document.getElementById("share-link");
     linkEl.style.display = "inline-block";
@@ -229,6 +234,7 @@ function bindEvents() {
     if (isHost()) {
         genShareLink();
     }
+    getOriginalTargetLink();
     initConnection();
     initEditor();
     await initTargetImage();
