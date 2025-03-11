@@ -220,8 +220,8 @@ async function initTargetImage() {
 
     // Setup slide over to compare feature
     const comparisonEl = document.getElementById("output-compare");
-    const { x, width } = comparisonEl.getBoundingClientRect();
     comparisonEl.addEventListener("mousemove", mouseEvt => {
+        const { x, width } = comparisonEl.getBoundingClientRect();
         const mx = mouseEvt.clientX;
         const perc = (mx - x) / width;
         referenceBg.style.width = (perc * 100) + "%";
