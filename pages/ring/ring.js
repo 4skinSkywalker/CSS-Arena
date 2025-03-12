@@ -172,7 +172,7 @@ function initEditor() {
     if (lastEditorContent) {
         editor.setValue(lastEditorContent);
     } else {
-        editor.setValue(`<div></div>\n<style>\n\tdiv {\n\t\twidth: 100px;\n\t\theight: 100px;\n\t\tbackground: #dd6b4d;\n\t}\n</style>`);
+        editor.setValue(`<div></div>\n<style>\n\tbody {\n\t\tbackground-color: #C0FFEE;\n\t}\n\tdiv {\n\t\twidth: 100px;\n\t\theight: 100px;\n\t\tbackground: #BADA55;\n\t}\n</style>`);
     }
 }
 
