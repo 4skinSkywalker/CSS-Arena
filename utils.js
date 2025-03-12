@@ -37,6 +37,7 @@ export function writeIntoIframe(id, _content) {
     iframe.contentWindow.document.close();
 
     const iframeBody = iframe.contentWindow.document.body;
+    iframeBody.style.margin = "0";
     iframeBody.style.width = "400px";
     iframeBody.style.height = "300px";
     iframeBody.style.overflow = "hidden";

@@ -19,6 +19,14 @@ let cluster;
     await cluster.task(async ({ page, data }) => {
         await page.setViewport({ width: 400, height: 300 });
         await page.setContent(data.html);
+
+        await page.evaluate(() => {
+            document.body.style.margin = "0";
+            document.body.style.width = "400px";
+            document.body.style.height = "300px";
+            document.body.style.overflow = "hidden";
+        });
+
         const imageBuffer = await page.screenshot({
             clip: { x: 0, y: 0, width: 400, height: 300 },
             type: "png",

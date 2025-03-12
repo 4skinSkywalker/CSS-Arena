@@ -39,8 +39,8 @@ function sendMessage(topic, message) {
 }
 
 function initConnection() {
-    ws = new WebSocket("wss://css-arena-13a0033b74e5.herokuapp.com");
-    // ws = new WebSocket("ws://localhost:5000");
+    const online = true;
+    ws = new WebSocket(online ? "wss://css-arena-13a0033b74e5.herokuapp.com" : "ws://localhost:5000");
 
     ws.onopen = () => {
         setConnectionStatus("Waiting for a peer to connect...");
@@ -103,8 +103,8 @@ function setShareLink() {
     linkEl.style.display = "inline-block";
     linkEl.href = `?battle=${getUrlAttr("battle")}&uid=${getOpponentId()}`;
 
-    linkEl.addEventListener("click", () => {
-        event.preventDefault();
+    linkEl.addEventListener("click", evt => {
+        evt.preventDefault();
         
         const prevText = linkEl.innerText;
         if (prevText === "Copied!") {
