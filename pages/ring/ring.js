@@ -13,12 +13,6 @@ function setConnectionStatus(status) {
     document.getElementById("connection-status").innerText = status;
 }
 
-function sendPing() {
-    if (ws && wsReady) {
-        ws.sendMsg("ping", clientId);
-    }
-}
-
 function setProgress(percentage, clientId) {
     progressPercentage = percentage;
     const suffix = clientId ? `-${clientId}` : "";
@@ -30,6 +24,12 @@ function setProgress(percentage, clientId) {
     }
     progressbarEl.setProgress(percentage);
     progressEl.innerText = percentage;
+}
+
+function sendPing() {
+    if (ws && wsReady) {
+        ws.sendMsg("ping", clientId);
+    }
 }
 
 function initConnection() {
@@ -52,7 +52,7 @@ function initConnection() {
         console.log("ws.message");
         const { topic, message } = JSON.parse(data);
         console.log(topic, message);
-        
+
         switch (topic) {
             case "pong": {
                 console.log("pong");
@@ -82,7 +82,7 @@ function initConnection() {
                 clientId = message;
                 console.log("This client has been assigned the id", clientId);
 
-                const askUntilProvided = function() {
+                const askUntilProvided = function () {
                     const msg = "Choose you name.\nBut choose carefully, you wont be able to change it later.";
                     const name = window.prompt(msg).trim();
                     if (!name) {
@@ -161,7 +161,7 @@ function setShareLink() {
 
     linkEl.addEventListener("click", evt => {
         evt.preventDefault();
-        
+
         const prevText = linkEl.innerText;
         if (prevText === "Copied!") {
             return;
@@ -200,8 +200,8 @@ async function refreshDiff() {
 async function editorChangeHandler() {
     lastEditorContent = DOMPurify.sanitize(editor.getSession().getValue());
     saveIntoLS(getLastContentKey(), lastEditorContent);
-    ws.sendMsg("lastEditorContent", { lastEditorContent });
     writeIntoIframe("output-iframe", lastEditorContent);
+    ws.sendMsg("lastEditorContent", { lastEditorContent });
 }
 
 function initEditor() {
@@ -221,8 +221,7 @@ function initEditor() {
 
     editor.getSession().setUseWorker(false);
     editor.getSession().setMode("ace/mode/html");
-    const debouncedEditorChangeHandler = debounce(editorChangeHandler, 300);
-    editor.getSession().on("change", debouncedEditorChangeHandler);
+    editor.getSession().on("change", debounce(editorChangeHandler, 500));
 
     lastEditorContent = loadFromLS(getLastContentKey()) || "";
     if (lastEditorContent) {
@@ -241,9 +240,11 @@ function addOpponent(clientId, clientName) {
 </div>
 
 <iframe id="output-iframe-${clientId}" frameborder="0"></iframe>`;
+
     const opponentEl = document.createElement("DIV");
     opponentEl.id = `opponent-${clientId}`;
     opponentEl.innerHTML = opponentHtml;
+
     document.getElementById("opponents-container").appendChild(opponentEl);
 }
 
@@ -289,7 +290,7 @@ async function sampleColors() {
 
 async function initTargetImage() {
     const battleId = getUrlAttr("battle");
-    
+
     const referenceBg = document.getElementById("reference-bg");
     referenceBg.style.backgroundImage = `url(/assets/img/${battleId}.png)`;
 
@@ -327,20 +328,16 @@ function bindChat() {
     });
 }
 
-function bindEvents() {
-    bindVimMode();
-    bindChat();
-}
-
 (async function () {
     if (!getUrlAttr("uid")) {
         upsertUrlAttr("uid", getUid());
     }
     setShareLink();
     setOriginalTargetLink();
-    initConnection();
     initEditor();
     await initTargetImage();
     sampleColors();
-    bindEvents();
+    bindVimMode();
+    bindChat();
+    initConnection();
 })();

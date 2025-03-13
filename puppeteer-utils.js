@@ -9,10 +9,13 @@ let cluster;
 (async function () {
     cluster = await Cluster.launch({
         concurrency: Cluster.CONCURRENCY_PAGE,
-        maxConcurrency: 100,
+        maxConcurrency: 20,
         puppeteerOptions: {
             headless: true,
-            args: ["--no-sandbox", "--disable-setuid-sandbox"]
+            args: [
+                "--no-sandbox",
+                "--disable-setuid-sandbox"
+            ]
         }
     });
 

@@ -12,7 +12,7 @@
 .ring__editor-header,
 .ring__output-header,
 .ring__target-header {
-    height: 36px;
+    min-height: 36px;
     padding-inline: 0.5rem;
     display: flex;
     align-items: center;
@@ -55,8 +55,8 @@
 }
 
 .ring__output-body>*,
-#opponents-container > *,
-#opponents-container > * > *,
+#opponents-container>*,
+#opponents-container>*>*,
 .ring__target-body>* {
     margin-bottom: 1rem;
 }
