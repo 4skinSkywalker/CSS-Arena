@@ -32,6 +32,11 @@ export function copyToClipboard(text) {
 export function writeIntoIframe(id, _content) {
     const content = `<html><head></head><body>${DOMPurify.sanitize(_content)}</body></html>`;
     const iframe = document.getElementById(id);
+    if (!iframe) {
+        console.error("Cannot find iframe with id", id);
+        return;
+    }
+
     iframe.contentWindow.document.open();
     iframe.contentWindow.document.write(content);
     iframe.contentWindow.document.close();
@@ -44,11 +49,7 @@ export function writeIntoIframe(id, _content) {
 }
 
 export function getUid() {
-    const uid = Math.random().toString(36).substring(2, 15);
-    if (uid[0] === "d" && uid[uid.length - 1] === "b") {
-        return getUid();
-    }
-    return uid;
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
 export function getUrlAttr(name) {

@@ -55,6 +55,8 @@
 }
 
 .ring__output-body>*,
+#opponents-container > *,
+#opponents-container > * > *,
 .ring__target-body>* {
     margin-bottom: 1rem;
 }
@@ -113,14 +115,14 @@
 
 #output-compare,
 #output-iframe,
-#output-iframe-opponent {
+#opponents-container iframe {
     width: 400px;
     height: 300px;
     background: #fff;
 }
 
 #output-iframe,
-#output-iframe-opponent {
+#opponents-container iframe {
     pointer-events: none;
 }
 
