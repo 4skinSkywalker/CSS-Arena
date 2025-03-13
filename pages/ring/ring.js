@@ -27,7 +27,7 @@ function setProgress(percentage, clientId) {
 }
 
 function initConnection() {
-    const online = false;
+    const online = true;
     ws = new WebSocket(online ? "wss://css-arena-13a0033b74e5.herokuapp.com" : "ws://localhost:5000");
 
     ws.sendMsg = (topic, message) => {
@@ -72,7 +72,7 @@ function initConnection() {
             case "nameRequest": {
                 clientId = message;
                 console.log("This client has been assigned the id", clientId);
-                
+
                 const askUntilProvided = function() {
                     const msg = "Choose you name.\nBut choose carefully, you wont be able to change it later.";
                     const name = window.prompt(msg).trim();

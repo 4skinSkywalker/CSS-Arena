@@ -154,6 +154,7 @@ async function handleMessage(ws, msg) {
 function handleClose(ws) {
     console.log(ws.clientId, "is leaving room", ws.roomId);
     const clients = roomIdClientArray[ws.roomId];
+    
     for (let i = clients.length - 1; i > -1; i--) {
         const client = clients[i];
         if (client.clientId === ws.clientId) {
@@ -162,6 +163,7 @@ function handleClose(ws) {
         }
         client.sendMsg("clientLeft", ws.clientId);
     }
+
     if (clients.length === 0) {
         console.log("Room", ws.roomId, "is empty, deleting");
         delete roomIdClientArray[ws.roomId];
