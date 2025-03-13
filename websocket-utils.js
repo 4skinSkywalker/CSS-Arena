@@ -34,6 +34,12 @@ async function handleMessage(ws, msg) {
     // console.log(topic, message);
 
     switch (topic) {
+        case "ping": {
+            const clientId = message;
+            console.log("Ping received from", clientId);
+            ws.sendMsg("pong");
+            break;
+        }
         case "roomIdResponse": {
             const roomId = message;
             console.log(ws.clientId, "responded to roomIdRequest with roomId", roomId);

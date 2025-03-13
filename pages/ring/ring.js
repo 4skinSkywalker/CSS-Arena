@@ -13,6 +13,12 @@ function setConnectionStatus(status) {
     document.getElementById("connection-status").innerText = status;
 }
 
+function sendPing() {
+    if (ws && wsReady) {
+        ws.sendMsg("ping", clientId);
+    }
+}
+
 function setProgress(percentage, clientId) {
     progressPercentage = percentage;
     const suffix = clientId ? `-${clientId}` : "";
@@ -31,16 +37,15 @@ function initConnection() {
     ws = new WebSocket(online ? "wss://css-arena-13a0033b74e5.herokuapp.com" : "ws://localhost:5000");
 
     ws.sendMsg = (topic, message) => {
-        if (!ws || !wsReady) {
-            console.error("WebSocket connection is not initialized or not ready");
-            return;
+        if (ws && wsReady) {
+            ws.send(JSON.stringify({ topic, message }));
         }
-        ws.send(JSON.stringify({ topic, message }))
     };
 
     ws.onopen = () => {
         console.log("ws.open");
         wsReady = true;
+        setInterval(sendPing, 30000);
     };
 
     ws.onmessage = ({ data }) => {
@@ -49,6 +54,10 @@ function initConnection() {
         console.log(topic, message);
         
         switch (topic) {
+            case "pong": {
+                console.log("pong");
+                break;
+            }
             case "clientIntroduced": {
                 const { clientId, clientName } = message;
                 addOpponent(clientId, clientName);
