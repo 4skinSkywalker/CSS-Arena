@@ -8,8 +8,8 @@ let cluster;
 
 (async function () {
     cluster = await Cluster.launch({
-        concurrency: Cluster.CONCURRENCY_PAGE,
-        maxConcurrency: 20,
+        concurrency: Cluster.CONCURRENCY_BROWSER,
+        maxConcurrency: 4,
         puppeteerOptions: {
             headless: true,
             args: [
@@ -19,9 +19,13 @@ let cluster;
         }
     });
 
-    await cluster.task(async ({ page, data }) => {
+    cluster.on("taskerror", (err, data) => {
+        console.log(`Error crawling ${data}: ${err.message}`);
+    });
+
+    await cluster.task(async ({ page, data: html }) => {
         await page.setViewport({ width: 400, height: 300 });
-        await page.setContent(data.html);
+        await page.setContent(html);
 
         await page.evaluate(() => {
             document.body.style.margin = "0";
@@ -46,7 +50,7 @@ async function getImageFromHtml(html) {
 
     try {
         html = DOMPurify.sanitize(html);
-        const imageBuffer = await cluster.execute({ html });
+        const imageBuffer = await cluster.execute(html);
         return Buffer.from(imageBuffer).toString("base64");
     } catch (error) {
         console.error("Error generating screenshot:", error);

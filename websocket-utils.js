@@ -1,6 +1,13 @@
 const { getImageFromHtml } = require("./puppeteer-utils");
 
+const verbose = false;
 const roomIdClientArray = {};
+
+function myLog(...args) {
+    if (verbose) {
+        console.log(...args);
+    }
+}
 
 function getUid() {
     return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -31,23 +38,23 @@ function checkString(map) {
 
 async function handleMessage(ws, msg) {
     const { topic, message } = parseMsg(msg);
-    // console.log(topic, message);
+    // myLog(topic, message);
 
     switch (topic) {
         case "ping": {
             const clientId = message;
-            console.log("Ping received from", clientId);
+            myLog("Ping received from", clientId);
             ws.sendMsg("pong");
             break;
         }
         case "roomIdResponse": {
             const roomId = message;
-            console.log(ws.clientId, "responded to roomIdRequest with roomId", roomId);
+            myLog(ws.clientId, "responded to roomIdRequest with roomId", roomId);
 
             checkString({ roomId });
 
             if (roomIdClientArray[roomId] && roomIdClientArray[roomId].includes(ws)) {
-                console.log(ws.clientId, "already in room", roomId);
+                myLog(ws.clientId, "already in room", roomId);
                 return;
             }
 
@@ -55,13 +62,13 @@ async function handleMessage(ws, msg) {
             roomIdClientArray[roomId] = roomIdClientArray[roomId] || [];
             roomIdClientArray[roomId].push(ws);
 
-            console.log(ws.clientId, "is requested to introduce his/herself in room", roomId);
+            myLog(ws.clientId, "is requested to introduce his/herself in room", roomId);
             ws.sendMsg("nameRequest", ws.clientId);
             break;
         }
         case "nameResponse": {
             ws.clientName = latinize(message);
-            console.log(ws.clientId, "is named", ws.clientName);
+            myLog(ws.clientId, "is named", ws.clientName);
 
             checkString({ clientName: ws.clientName });
 
@@ -77,7 +84,7 @@ async function handleMessage(ws, msg) {
                 .map(client => ({ clientId: client.clientId, clientName: client.clientName }));
             ws.sendMsg("clientsAlreadyIn", clientsAlreadyIn);
 
-            console.log("Asking the introduced client to send their data");
+            myLog("Asking the introduced client to send their data");
             ws.sendMsg("initialDataRequest");
             break;
         }
@@ -96,7 +103,7 @@ async function handleMessage(ws, msg) {
         }
         case "lastEditorContent": {
             const { clientId, lastEditorContent } = message;
-            console.log(ws.clientId, "sent last editor content");
+            myLog(ws.clientId, "sent last editor content");
 
             checkString({ lastEditorContent });
 
@@ -120,7 +127,7 @@ async function handleMessage(ws, msg) {
         }
         case "progress": {
             const { clientId, percentage } = message;
-            console.log(ws.clientId, "sent progress", percentage);
+            myLog(ws.clientId, "sent progress", percentage);
 
             checkString({ percentage });
 
@@ -139,7 +146,7 @@ async function handleMessage(ws, msg) {
             break;
         }
         case "chat": {
-            console.log(ws.clientId, "sent chat message", message);
+            myLog(ws.clientId, "sent chat message", message);
 
             checkString({ message });
 
@@ -152,13 +159,13 @@ async function handleMessage(ws, msg) {
             break;
         }
         default: {
-            console.log("Unknown topic", topic);
+            myLog("Unknown topic", topic);
         }
     }
 }
 
 function handleClose(ws) {
-    console.log(ws.clientId, "is leaving room", ws.roomId);
+    myLog(ws.clientId, "is leaving room", ws.roomId);
     const clients = roomIdClientArray[ws.roomId];
     
     for (let i = clients.length - 1; i > -1; i--) {
@@ -171,7 +178,7 @@ function handleClose(ws) {
     }
 
     if (clients.length === 0) {
-        console.log("Room", ws.roomId, "is empty, deleting");
+        myLog("Room", ws.roomId, "is empty, deleting");
         delete roomIdClientArray[ws.roomId];
     }
 }
@@ -180,7 +187,7 @@ function handleConnection(ws) {
     ws.clientId = getUid();
     ws.sendMsg = (topic, message) => ws.send(JSON.stringify({ topic, message }));
 
-    console.log("Client connected", ws.clientId);
+    myLog("Client connected", ws.clientId);
     ws.sendMsg("roomIdRequest");
 
     ws.on("message", msg => handleMessage(ws, msg));
