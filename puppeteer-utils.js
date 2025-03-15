@@ -1,15 +1,13 @@
-const puppeteer = require("puppeteer");
+const { Cluster } = require("puppeteer-cluster");
 const { JSDOM } = require("jsdom");
 const window = new JSDOM("").window;
 const createDOMPurify = require("dompurify");
 const DOMPurify = createDOMPurify(window);
 
-const verbose = false;
-const concurrentBrowsers = 4;
-const maxQueueSize = 25;
-const showBrowsers = true;
-let browserIdx = 0;
-const browsers = [];
+const verbose = true;
+const maxConcurrency = 4;
+const headless = false;
+let cluster;
 
 function log(...args) {
     if (verbose) {
@@ -17,103 +15,65 @@ function log(...args) {
     }
 }
 
-async function genBrowser() {
-    const browser = await puppeteer.launch({
-        headless: showBrowsers,
-        args: [
-            "--no-sandbox",
-            "--disable-setuid-sandbox"
-        ]
-    });
-
-    const page = await browser.newPage();
-    await page.setViewport({ width: 450, height: 350 });
-
-    if (showBrowsers) {
-        const session = await page.target().createCDPSession();
-        await session.send("Emulation.setFocusEmulationEnabled", { enabled: true });
+async function getImageFromHtml(html) {
+    if (!html || typeof html !== "string" || html.length > 5000) {
+        throw new Error("Validation failed");
     }
 
-    browser._busy = false;
-    browser._page = page;
-    browser._queue = new Map();
-
-    return browser;
-}
-
-function snapshot(browser, html) {
-    return new Promise(async res => {
-        log("Locking browser");
-        browser._busy = true;
-
-        log("Snapshotting...");
-        await browser._page.setContent(DOMPurify.sanitize(html));
-        await browser._page.evaluate(() => {
-            document.body.style.margin = "0";
-            document.body.style.width = "400px";
-            document.body.style.height = "300px";
-            document.body.style.overflow = "hidden";
-        });
-        const imageBuffer = await browser._page.screenshot({
-            clip: { x: 0, y: 0, width: 400, height: 300 },
-            type: "png",
-        });
-        log("Snapshotted successfully");
-        res(Buffer.from(imageBuffer).toString("base64"));
-
-        log("Unlocking browser");
-        browser._busy = false;
-
-        log("Queue size", browser._queue.size);
-
-        const nextTask = browser._queue.entries().next();
-        if (nextTask.value) {
-            log("Next task found, starting snapshot");
-            const [clientId, { html, res }] = nextTask.value;
-            browser._queue.delete(clientId);
-            res(await snapshot(browser, html));
-        }
-    });
-}
-
-function getBrowser() {
-    if (browserIdx >= browsers.length) {
-        browserIdx = 0;
-    }
-    const browser = browsers[browserIdx];
-    browserIdx++;
-    return browser;
-}
-
-async function getImageFromHtml(html, clientId) {
-    if (!html || typeof html !== "string" || html.length > 5000 || !clientId) {
-        throw new Error("Validation error");
-    }
-
-    const browser = getBrowser();
-    if (!browser) {
-        throw new Error("No browser available");
-    }
-
-    if (!browser._busy) {
-        log("Browser is not busy, starting snapshot");
-        return await snapshot(browser, html);
-    }
-
-    return new Promise((res, rej) => {
-        log("Browser is busy, adding to queue");
-        if (browser._queue.size >= maxQueueSize) {
-            rej("Queue is full");
-            return;
-        }
-        browser._queue.set(clientId, { html, res });
+    return new Promise((resolve, reject) => {
+        cluster.queue({ html: DOMPurify.sanitize(html), resolve, reject });
     });
 };
 
 (async function () {
-    for (let i = 0; i < concurrentBrowsers; i++) {
-        browsers.push(await genBrowser());
-    }
+    cluster = await Cluster.launch({
+        concurrency: Cluster.CONCURRENCY_PAGE,
+        maxConcurrency,
+        puppeteerOptions: {
+            headless,
+            args: [
+                "--no-sandbox",
+                "--disable-setuid-sandbox"
+            ]
+        }
+    });
+
+    cluster.on("taskerror", (err, data) => {
+        log(`Error ${data}: ${err.message}`);
+    });
+
+    await cluster.task(async ({ page, data }) => {
+        try {
+            const { html, resolve, reject } = data;
+
+            log("Setting page vieport and content");
+            await page.setViewport({ width: 400, height: 300 });
+            await page.setContent(html);
+
+            log("Setting page default styles");
+            await page.evaluate(() => {
+                document.body.style.margin = "0";
+                document.body.style.width = "400px";
+                document.body.style.height = "300px";
+                document.body.style.overflow = "hidden";
+            });
+
+            log("Taking screenshot");
+            const imageBuffer = await Promise.race([
+                page.screenshot({
+                    clip: { x: 0, y: 0, width: 400, height: 300 },
+                    type: "png",
+                }),
+                new Promise((_, reject) => setTimeout(() => reject("Screenshot timeout"), 3000))
+            ]);
+
+            log("Image buffer resolved");
+            resolve(Buffer.from(imageBuffer).toString("base64"));
+        } catch (e) {
+            console.error("Error taking screenshot:", e);
+            reject(e);
+        }
+    });
 })();
 
 module.exports = {
