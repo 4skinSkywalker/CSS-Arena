@@ -6,7 +6,7 @@ const DOMPurify = createDOMPurify(window);
 
 const verbose = true;
 const maxConcurrency = 4;
-const headless = false;
+const headless = true;
 let cluster;
 
 function log(...args) {
