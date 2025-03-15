@@ -1,6 +1,6 @@
 const { getImageFromHtml } = require("./puppeteer-utils");
 
-const verbose = false;
+const verbose = true;
 const roomIdClientArray = {};
 
 function log(...args) {

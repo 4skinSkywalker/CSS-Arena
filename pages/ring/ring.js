@@ -2,7 +2,7 @@ import { Chat } from "../../components/chat.js";
 import { Progressbar } from "../../components/progressbar.js";
 import { debounce, copyToClipboard, writeIntoIframe, getUid, getUrlAttr, upsertUrlAttr, getPixelDiff, getImageDataFromImg, getCanvasFromImageData, saveIntoLS, loadFromLS } from "/utils.js";
 
-const online = false;
+const online = true;
 let clientId;
 let ws;
 let wsReady = false;
