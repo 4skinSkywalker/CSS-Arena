@@ -298,14 +298,17 @@ async function initTargetImage() {
     await new Promise(res => targetImg.onload = res, targetImg.src = `/assets/img/${battleId}.png`);
 
     // Setup slide over to compare feature
-    const comparisonEl = document.getElementById("output-compare");
-    comparisonEl.addEventListener("mousemove", mouseEvt => {
-        const { x, width } = comparisonEl.getBoundingClientRect();
-        const mx = mouseEvt.clientX;
-        const perc = (mx - x) / width;
-        referenceBg.style.width = (perc * 100) + "%";
+    const outputWrap = document.getElementById("output-wrap");
+    outputWrap.addEventListener("mousemove", mouseEvt => {
+        const { x, y, width, height } = outputWrap.getBoundingClientRect();
+        const [mx, my] = [mouseEvt.clientX, mouseEvt.clientY];
+        const [percx, percy] = [(mx - x) / width, (my - y) / height];
+        referenceBg.style.width = (percx * 100) + "%";
+        const rulerx = (Math.round(percx * 400) + "px").padStart(6, "⠀");
+        const rulery = (Math.round(percy * 400) + "px").padStart(6, "⠀");
+        document.getElementById("ruler").innerText = `x: ${rulerx}\ny: ${rulery}`;
     });
-    comparisonEl.addEventListener("mouseleave", () => {
+    outputWrap.addEventListener("mouseleave", () => {
         referenceBg.style.width = "0%";
     });
 }

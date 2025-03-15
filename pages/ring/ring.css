@@ -81,7 +81,6 @@
 
 #output-img,
 #output-diff,
-#output-compare,
 #output-iframe,
 #reference-bg {
     position: absolute;
@@ -94,10 +93,22 @@
     height: 100%;
     background-image: url(/assets/img/placeholder.png);
     background-size: cover;
-    opacity: 0.85;
+    overflow: hidden;
 }
 
-#output-compare {
+#ruler {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 0.25rem;
+    font-size: 0.777rem;
+    font-weight: 700;
+    color: #fff;
+    background: #f00;
+    white-space: nowrap;
+}
+
+#output-iframe {
     opacity: 1;
 }
 
@@ -105,7 +116,7 @@
     opacity: 0;
 }
 
-.ring__output:has(#show-diff:checked) #output-compare {
+.ring__output:has(#show-diff:checked) #output-iframe {
     opacity: 0;
 }
 
@@ -113,7 +124,6 @@
     opacity: 1;
 }
 
-#output-compare,
 #output-iframe,
 #opponents-container iframe {
     width: 400px;

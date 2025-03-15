@@ -130,7 +130,7 @@ export class Chat extends HTMLElement {
         if (clientName) {
             this.shadowRoot.getElementById("chat-toggle").checked = true;
         }
-        
+
         const chatMessageName = document.createElement("DIV");
         chatMessageName.style.fontSize = "0.777rem";
         chatMessageName.style.opacity = "0.8";
@@ -143,8 +143,10 @@ export class Chat extends HTMLElement {
         chatMessage.classList.add(clientName ? "chat__message-opponent" : "chat__message");
         chatMessage.appendChild(chatMessageName);
         chatMessage.appendChild(chatMessageContent);
-        
-        this.shadowRoot.querySelector(".chat__messages").prepend(chatMessage);
+
+        const chatMessages = this.shadowRoot.querySelector(".chat__messages");
+        chatMessages.appendChild(chatMessage);
+        chatMessages.scrollTo(0, chatMessages.scrollHeight);
     }
 
     chatMessageSend = () => {

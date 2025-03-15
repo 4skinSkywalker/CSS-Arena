@@ -100,15 +100,17 @@ async function handleMessage(ws, msg) {
             checkString({ clientName: ws.clientName });
 
             for (const client of getClients(ws.roomId)) {
-                if (!client.clientName || client.clientId === ws.clientId) {
-                    continue;
+                if (client.clientId !== ws.clientId) {
+                    client.sendMsg("clientIntroduced", { clientId: ws.clientId, clientName: ws.clientName });
                 }
-                client.sendMsg("clientIntroduced", { clientId: ws.clientId, clientName: ws.clientName });
             }
 
-            const clientsAlreadyIn = getClients(ws.roomId)
-                .filter(client => client.clientId !== ws.clientId)
-                .map(client => ({ clientId: client.clientId, clientName: client.clientName }));
+            const clientsAlreadyIn = [];
+            for (const { clientId, clientName } of getClients(ws.roomId)) {
+                if (clientId !== ws.clientId) {
+                    clientsAlreadyIn.push({ clientId, clientName });
+                }
+            }
             ws.sendMsg("clientsAlreadyIn", clientsAlreadyIn);
 
             log("Asking the introduced client to send their data");
@@ -121,10 +123,9 @@ async function handleMessage(ws, msg) {
             checkString({ clientId });
 
             for (const client of getClients(ws.roomId)) {
-                if (!client.clientName || client.clientId === ws.clientId) {
-                    continue;
+                if (client.clientId !== ws.clientId) {
+                    client.sendMsg("opponentDataRequest", clientId);
                 }
-                client.sendMsg("opponentDataRequest", clientId);
             }
             break;
         }
@@ -134,25 +135,41 @@ async function handleMessage(ws, msg) {
 
             checkString({ lastEditorContent });
 
+            // The data has to be sent to a specific client
             if (clientId) {
                 const client = getClients(ws.roomId).find(c => c.clientId === clientId);
                 if (client) {
-                    client.sendMsg("lastEditorContent", { clientId: ws.clientId, lastEditorContent });
+                    client.sendMsg(
+                        "lastEditorContent",
+                        {
+                            clientId: ws.clientId,
+                            lastEditorContent,
+                            clientName: ws.clientName
+                        }
+                    );
                 }
                 return;
             }
 
+            // The data has to be sent to all clients
             for (const client of getClients(ws.roomId)) {
-                if (!client.clientName) {
-                    continue;
-                }
+
+                // Send back screenshot for diffing to the sender
                 if (client.clientId === ws.clientId) {
                     getImageFromHtml(lastEditorContent, client.clientId)
                         .then(b64 => ws.sendMsg("imageForDiff", b64))
                         .catch(console.error);
                     continue;
                 }
-                client.sendMsg("lastEditorContent", { clientId: ws.clientId, lastEditorContent });
+
+                client.sendMsg(
+                    "lastEditorContent",
+                    {
+                        clientId: ws.clientId,
+                        lastEditorContent,
+                        clientName: ws.clientName
+                    }
+                );
             }
             break;
         }
@@ -162,6 +179,7 @@ async function handleMessage(ws, msg) {
 
             checkString({ percentage });
 
+            // The data has to be sent to a specific client
             if (clientId) {
                 const client = getClients(ws.roomId).find(c => c.clientId === clientId);
                 if (client) {
@@ -170,11 +188,11 @@ async function handleMessage(ws, msg) {
                 return;
             }
 
+            // The data has to be sent to all clients
             for (const client of getClients(ws.roomId)) {
-                if (!client.clientName || client.clientId === ws.clientId) {
-                    continue;
+                if (client.clientId !== ws.clientId) {
+                    client.sendMsg("progress", { clientId: ws.clientId, percentage });
                 }
-                client.sendMsg("progress", { clientId: ws.clientId, percentage });
             }
             break;
         }
@@ -184,10 +202,16 @@ async function handleMessage(ws, msg) {
             checkString({ message });
 
             for (const client of getClients(ws.roomId)) {
-                if (!client.clientName || client.clientId === ws.clientId) {
-                    continue;
+                if (client.clientId !== ws.clientId) {
+                    client.sendMsg(
+                        "chat",
+                        {
+                            clientId: ws.clientId,
+                            name: ws.clientName || "Anonymous",
+                            message
+                        }
+                    );
                 }
-                client.sendMsg("chat", { clientId: ws.clientId, name: ws.clientName, message });
             }
             break;
         }
