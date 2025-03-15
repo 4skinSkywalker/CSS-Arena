@@ -5,7 +5,6 @@
     "express": "^4.21.2",
     "jsdom": "^26.0.0",
     "puppeteer": "^24.4.0",
-    "puppeteer-cluster": "^0.24.0",
     "ws": "^8.18.1"
   },
   "name": "css-arena",

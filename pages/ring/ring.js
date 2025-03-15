@@ -2,6 +2,7 @@ import { Chat } from "../../components/chat.js";
 import { Progressbar } from "../../components/progressbar.js";
 import { debounce, copyToClipboard, writeIntoIframe, getUid, getUrlAttr, upsertUrlAttr, getPixelDiff, getImageDataFromImg, getCanvasFromImageData, saveIntoLS, loadFromLS } from "/utils.js";
 
+const online = true;
 let clientId;
 let ws;
 let wsReady = false;
@@ -33,7 +34,6 @@ function sendPing() {
 }
 
 function initConnection() {
-    const online = true;
     ws = new WebSocket(online ? "wss://css-arena-13a0033b74e5.herokuapp.com" : "ws://localhost:5000");
 
     ws.sendMsg = (topic, message) => {
