@@ -304,8 +304,8 @@ async function initTargetImage() {
         const [mx, my] = [mouseEvt.clientX, mouseEvt.clientY];
         const [percx, percy] = [(mx - x) / width, (my - y) / height];
         referenceBg.style.width = (percx * 100) + "%";
-        const rulerx = (Math.round(percx * 400) + "px").padStart(6, "⠀");
-        const rulery = (Math.round(percy * 400) + "px").padStart(6, "⠀");
+        const rulerx = (Math.round(percx * width) + "px").padStart(6, "⠀");
+        const rulery = (Math.round(percy * height) + "px").padStart(6, "⠀");
         document.getElementById("ruler").innerText = `x: ${rulerx}\ny: ${rulery}`;
     });
     outputWrap.addEventListener("mouseleave", () => {
