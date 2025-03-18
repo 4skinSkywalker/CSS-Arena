@@ -117,6 +117,7 @@ function initConnection() {
                 const { lastEditorContent, clientId, clientName } = message;
                 setConnectionStatus(`Received update from ${clientName}`);
                 writeIntoIframe(`output-iframe-${clientId}`, DOMPurify.sanitize(lastEditorContent));
+                document.getElementById(`char-count-${clientId}`).innerText = lastEditorContent.length;
                 break;
             }
             case "progress": {
@@ -190,7 +191,7 @@ async function refreshDiff() {
 
     const { imageData, similarity } = getPixelDiff(outputImgData, targetImgData);
 
-    const percentage = Math.round(similarity * 100) + "%";
+    const percentage = (similarity * 100).toFixed(1) + "%";
     setProgress(percentage);
     ws.sendMsg("progress", { percentage });
 
@@ -201,6 +202,7 @@ async function editorChangeHandler() {
     lastEditorContent = DOMPurify.sanitize(editor.getSession().getValue());
     saveIntoLS(getLastContentKey(), lastEditorContent);
     writeIntoIframe("output-iframe", lastEditorContent);
+    document.getElementById("char-count").innerText = lastEditorContent.length;
     ws.sendMsg("lastEditorContent", { lastEditorContent });
 }
 
@@ -234,9 +236,12 @@ function initEditor() {
 function addOpponent(clientId, clientName) {
     const opponentHtml = `
 <div class="ring__label">
-    <span>${clientName} output</span>
+    <span>${clientName}</span>
     <app-progressbar id="progressbar-${clientId}"></app-progressbar>
     <span id="progress-${clientId}">0%</span>
+    <div class="char-count-wrap">
+        <span id="char-count-${clientId}">0</span> chars
+    </div>
 </div>
 
 <iframe id="output-iframe-${clientId}" frameborder="0"></iframe>`;
