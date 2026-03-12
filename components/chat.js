@@ -3,7 +3,7 @@ export class Chat extends HTMLElement {
         super();
         this.attachShadow({ mode: "open" });
         this.shadowRoot.innerHTML = `
-<link rel="stylesheet" href="/common.css">
+<link rel="stylesheet" href="https://4skinskywalker.github.io/CSS-Arena/common.css">
 <style>
     .chat {
         position: fixed;

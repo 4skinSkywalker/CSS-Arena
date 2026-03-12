@@ -1,6 +1,6 @@
 import { Chat } from "../../components/chat.js";
 import { Progressbar } from "../../components/progressbar.js";
-import { debounce, copyToClipboard, writeIntoIframe, getUid, getUrlAttr, upsertUrlAttr, getPixelDiff, getImageDataFromImg, getCanvasFromImageData, saveIntoLS, loadFromLS } from "/utils.js";
+import { debounce, copyToClipboard, writeIntoIframe, getUid, getUrlAttr, upsertUrlAttr, getPixelDiff, getImageDataFromImg, getCanvasFromImageData, saveIntoLS, loadFromLS } from "../../utils.js";
 
 const online = true;
 let clientId;
@@ -297,10 +297,10 @@ async function initTargetImage() {
     const battleId = getUrlAttr("battle");
 
     const referenceBg = document.getElementById("reference-bg");
-    referenceBg.style.backgroundImage = `url(/assets/img/${battleId}.png)`;
+    referenceBg.style.backgroundImage = `url(../../assets/img/${battleId}.png)`;
 
     const targetImg = document.getElementById("target-img");
-    await new Promise(res => targetImg.onload = res, targetImg.src = `/assets/img/${battleId}.png`);
+    await new Promise(res => targetImg.onload = res, targetImg.src = `../../assets/img/${battleId}.png`);
 
     // Setup slide over to compare feature
     const outputWrap = document.getElementById("output-wrap");
